@@ -1,7 +1,7 @@
 from flask import Flask, request, send_file, jsonify
 import os
 import uuid
-import subprocess
+from insta_downloader import InstaDownloader
 
 app = Flask(__name__)
 
@@ -19,31 +19,20 @@ def download_insta_media():
     try:
         # Generate a unique filename
         unique_id = str(uuid.uuid4())
-        
-        # Use instagram-scraper to download media
-        command = [
-            "instagram-scraper",
-            insta_url,
-            "--destination", DOWNLOAD_DIR,
-            "--media-types", "image,video",
-            "--latest-stamps", DOWNLOAD_DIR,
-            "--filename-template", unique_id
-        ]
-        subprocess.run(command, check=True)
+        downloader = InstaDownloader()
 
-        # Find downloaded media file
-        media_file = next((f for f in os.listdir(DOWNLOAD_DIR) if unique_id in f), None)
-        if media_file:
-            media_path = os.path.join(DOWNLOAD_DIR, media_file)
-            
-            # Send the media file
+        # Download media using insta-downloader
+        media = downloader.download_post(insta_url)
+
+        if media:
+            media_path = media[0]  # Get the first media item (could be a video or image)
             response = send_file(media_path, as_attachment=True)
 
             # Schedule file deletion after sending
             @response.call_on_close
             def cleanup():
                 os.remove(media_path)
-            
+
             return response
 
         return jsonify({"error": "Failed to download media"}), 500
