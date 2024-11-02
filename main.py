@@ -5,12 +5,12 @@ import uuid
 
 app = Flask(__name__)
 
-username = 'your_username'
-password = 'your_password'
+username = '0672633675'
+password = 'Ampfar12@'
 loader1 = instaloader.Instaloader()
 
 try:
-    loader.login(username, password)  # Logs in
+    loader1.login(username, password)  # Logs in
     print("Login successful.")
 except instaloader.exceptions.BadCredentialsException:
     print("Error: Bad credentials. Check your username and password.")
