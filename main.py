@@ -5,12 +5,6 @@ import uuid
 
 app = Flask(__name__)
 
-username = 'ampfar1'
-password = 'Ampfar12@'
-loader1 = instaloader.Instaloader()
-
-loader1.login(username, password)  # Logs in
-print("Login successful.")
 # Directory path for temporary downloads
 DOWNLOAD_DIR = "insta"
 os.makedirs(DOWNLOAD_DIR, exist_ok=True)
