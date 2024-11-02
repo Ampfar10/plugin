@@ -83,20 +83,24 @@ def download_youtube_playlist():
         for video in playlist.videos:
             downloading_songs.append(video.title)
 
-            # Download the audio stream of each video
-            audio_stream = video.streams.filter(only_audio=True).first()
-            audio_file_path = os.path.join(DOWNLOAD_DIR, f"{video.title}.mp3")
-            audio_stream.download(output_path=DOWNLOAD_DIR, filename=f"{video.title}.mp3")
+            # Download the video stream of each video
+            video_stream = video.streams.filter(progressive=True, file_extension='mp4').first()
+            video_file_path = os.path.join(DOWNLOAD_DIR, f"{video.title}.mp4")
+
+            # Check if a video stream is available
+            if video_stream is None:
+                return jsonify({"error": f"No downloadable stream found for {video.title}."}), 400
+
+            video_stream.download(output_path=DOWNLOAD_DIR, filename=f"{video.title}.mp4")
 
             # Update downloaded songs
             downloaded_songs.append(video.title)
             downloading_songs.remove(video.title)
 
-        # Return the list of downloaded songs
-        return jsonify({"audio_files": downloaded_songs}), 200
+        return jsonify({"video_files": downloaded_songs}), 200
 
     except Exception as e:
-        print(f"Error: {e}")
+        print(f"Error: {e}")  # Log the error to the console
         return jsonify({"error": "An error occurred while processing your request."}), 500
 
 @app.route('/ytv', methods=['POST'])
