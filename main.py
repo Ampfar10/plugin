@@ -9,15 +9,8 @@ username = '0672633675'
 password = 'Ampfar12@'
 loader1 = instaloader.Instaloader()
 
-try:
-    loader1.login(username, password)  # Logs in
-    print("Login successful.")
-except instaloader.exceptions.BadCredentialsException:
-    print("Error: Bad credentials. Check your username and password.")
-except instaloader.exceptions.TwoFactorAuthRequiredException:
-    print("Error: Two-factor authentication is required. Please handle it manually.")
-except Exception as e:
-    print(f"An error occurred: {e}")
+loader1.login(username, password)  # Logs in
+print("Login successful.")
 # Directory path for temporary downloads
 DOWNLOAD_DIR = "insta"
 os.makedirs(DOWNLOAD_DIR, exist_ok=True)
