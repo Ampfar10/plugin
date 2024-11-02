@@ -1,4 +1,5 @@
 from flask import Flask, request, send_file, jsonify
+from pytube import Playlist
 import instaloader
 import os
 import uuid
@@ -46,6 +47,53 @@ def download_insta_media():
             return response
 
         return jsonify({"error": "Failed to download media"}), 500
+
+    except Exception as e:
+        print(f"Error: {e}")
+        return jsonify({"error": "An error occurred while processing your request."}), 500
+
+# Global variables to hold the state
+current_playlist_url = None
+downloaded_songs = []
+downloading_songs = []
+
+@app.route('/')
+def status():
+    return jsonify({
+        "playlist_url": current_playlist_url,
+        "downloaded_songs": downloaded_songs,
+        "downloading_songs": downloading_songs
+    })
+
+@app.route('/yta', methods=['POST'])
+def download_youtube_playlist():
+    global current_playlist_url, downloaded_songs, downloading_songs
+    data = request.json
+    playlist_url = data.get('url')
+    if not playlist_url:
+        return jsonify({"error": "No URL provided"}), 400
+
+    current_playlist_url = playlist_url
+    downloading_songs = []
+
+    try:
+        # Initialize Playlist
+        playlist = Playlist(playlist_url)
+
+        for video in playlist.videos:
+            downloading_songs.append(video.title)
+
+            # Download the audio stream of each video
+            audio_stream = video.streams.filter(only_audio=True).first()
+            audio_file_path = os.path.join(DOWNLOAD_DIR, f"{video.title}.mp3")
+            audio_stream.download(output_path=DOWNLOAD_DIR, filename=f"{video.title}.mp3")
+
+            # Update downloaded songs
+            downloaded_songs.append(video.title)
+            downloading_songs.remove(video.title)
+
+        # Return the list of downloaded songs
+        return jsonify({"audio_files": downloaded_songs}), 200
 
     except Exception as e:
         print(f"Error: {e}")
