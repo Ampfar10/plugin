@@ -6,7 +6,7 @@ import uuid
 app = Flask(__name__)
 
 # Directory path for temporary downloads
-DOWNLOAD_DIR = "/insta"
+DOWNLOAD_DIR = "insta"
 os.makedirs(DOWNLOAD_DIR, exist_ok=True)
 
 @app.route('/insta', methods=['POST'])
