@@ -99,5 +99,28 @@ def download_youtube_playlist():
         print(f"Error: {e}")
         return jsonify({"error": "An error occurred while processing your request."}), 500
 
+@app.route('/ytv', methods=['POST'])
+def download_youtube_video():
+    data = request.json
+    video_url = data.get('url')
+    if not video_url:
+        return jsonify({"error": "No URL provided"}), 400
+
+    try:
+        # Initialize YouTube object
+        video = YouTube(video_url)
+        video_stream = video.streams.filter(progressive=True, file_extension='mp4').first()
+
+        # Define the file path for the downloaded video
+        video_file_path = os.path.join(DOWNLOAD_DIR, f"{video.title}.mp4")
+        video_stream.download(output_path=DOWNLOAD_DIR, filename=f"{video.title}.mp4")
+
+        return jsonify({"video_file": video.title}), 200
+
+    except Exception as e:
+        print(f"Error: {e}")
+        return jsonify({"error": "An error occurred while processing your request."}), 500
+
+
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0', port=5000)
