@@ -1,30 +1,13 @@
 from flask import Flask, request, send_file, jsonify
-import instaloader
+from pyinstadownload import PyInstaDownload
 import os
 import uuid
-import random
 
 app = Flask(__name__)
 
 # Directory path for temporary downloads
-DOWNLOAD_DIR = "insta"
+DOWNLOAD_DIR = "/home/Ampfar12/mysite/insta"
 os.makedirs(DOWNLOAD_DIR, exist_ok=True)
-
-# Load proxies from a file and add "http://" if missing
-def load_proxies():
-    with open("http.txt", "r") as file:
-        proxies = [
-            proxy.strip() if proxy.startswith("http") else f"http://{proxy.strip()}"
-            for proxy in file.readlines()
-        ]
-    return proxies
-
-# Choose a random proxy
-def get_random_proxy():
-    proxies = load_proxies()
-    if proxies:
-        return random.choice(proxies)
-    return None
 
 @app.route('/insta', methods=['POST'])
 def download_insta_media():
@@ -33,34 +16,24 @@ def download_insta_media():
     if not insta_url:
         return jsonify({"error": "No URL provided"}), 400
 
-    # Choose a random proxy
-    proxy = get_random_proxy()
-    if not proxy:
-        return jsonify({"error": "No proxies available"}), 500
-
-    proxy_dict = {
-        'http': proxy,
-        'https': proxy,
-    }
-
     try:
-        # Initialize instaloader with proxy and download the media
-        loader = instaloader.Instaloader(dirname_pattern=DOWNLOAD_DIR, filename_pattern=str(uuid.uuid4()))
-        loader.context.session.proxies = proxy_dict
-        post = instaloader.Post.from_shortcode(loader.context, insta_url.split("/")[-2])
-        loader.download_post(post, target=DOWNLOAD_DIR)
-
-        # Find the downloaded media file
-        media_file = next((f for f in os.listdir(DOWNLOAD_DIR) if f.endswith(('.mp4', '.jpg'))), None)
-        if media_file:
-            media_path = os.path.join(DOWNLOAD_DIR, media_file)
-            response = send_file(media_path, as_attachment=True)
-
-            # Clean up the file after sending
+        # Generate a unique filename
+        unique_id = str(uuid.uuid4())
+        download_path = os.path.join(DOWNLOAD_DIR, unique_id)
+        
+        # Initialize PyInstaDownload and download media
+        downloader = PyInstaDownload()
+        media_file = downloader.download(insta_url, folder=DOWNLOAD_DIR, filename=unique_id)
+        
+        # Send the file if download was successful
+        if media_file and os.path.exists(media_file):
+            response = send_file(media_file, as_attachment=True)
+            
+            # Delete the file after sending it
             @response.call_on_close
             def cleanup():
-                if os.path.exists(media_path):
-                    os.remove(media_path)
+                if os.path.exists(media_file):
+                    os.remove(media_file)
 
             return response
 
