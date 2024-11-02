@@ -5,6 +5,19 @@ import uuid
 
 app = Flask(__name__)
 
+username = 'your_username'
+password = 'your_password'
+loader1 = instaloader.Instaloader()
+
+try:
+    loader.login(username, password)  # Logs in
+    print("Login successful.")
+except instaloader.exceptions.BadCredentialsException:
+    print("Error: Bad credentials. Check your username and password.")
+except instaloader.exceptions.TwoFactorAuthRequiredException:
+    print("Error: Two-factor authentication is required. Please handle it manually.")
+except Exception as e:
+    print(f"An error occurred: {e}")
 # Directory path for temporary downloads
 DOWNLOAD_DIR = "insta"
 os.makedirs(DOWNLOAD_DIR, exist_ok=True)
