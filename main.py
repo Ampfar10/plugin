@@ -1,12 +1,12 @@
 from flask import Flask, request, send_file, jsonify
-from pyinstadownload import PyInstaDownload
 import os
 import uuid
+import subprocess
 
 app = Flask(__name__)
 
 # Directory path for temporary downloads
-DOWNLOAD_DIR = "/home/Ampfar12/mysite/insta"
+DOWNLOAD_DIR = "insta"
 os.makedirs(DOWNLOAD_DIR, exist_ok=True)
 
 @app.route('/insta', methods=['POST'])
@@ -19,22 +19,31 @@ def download_insta_media():
     try:
         # Generate a unique filename
         unique_id = str(uuid.uuid4())
-        download_path = os.path.join(DOWNLOAD_DIR, unique_id)
         
-        # Initialize PyInstaDownload and download media
-        downloader = PyInstaDownload()
-        media_file = downloader.download(insta_url, folder=DOWNLOAD_DIR, filename=unique_id)
-        
-        # Send the file if download was successful
-        if media_file and os.path.exists(media_file):
-            response = send_file(media_file, as_attachment=True)
+        # Use instagram-scraper to download media
+        command = [
+            "instagram-scraper",
+            insta_url,
+            "--destination", DOWNLOAD_DIR,
+            "--media-types", "image,video",
+            "--latest-stamps", DOWNLOAD_DIR,
+            "--filename-template", unique_id
+        ]
+        subprocess.run(command, check=True)
+
+        # Find downloaded media file
+        media_file = next((f for f in os.listdir(DOWNLOAD_DIR) if unique_id in f), None)
+        if media_file:
+            media_path = os.path.join(DOWNLOAD_DIR, media_file)
             
-            # Delete the file after sending it
+            # Send the media file
+            response = send_file(media_path, as_attachment=True)
+
+            # Schedule file deletion after sending
             @response.call_on_close
             def cleanup():
-                if os.path.exists(media_file):
-                    os.remove(media_file)
-
+                os.remove(media_path)
+            
             return response
 
         return jsonify({"error": "Failed to download media"}), 500
