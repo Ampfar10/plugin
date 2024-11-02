@@ -1,7 +1,7 @@
 from flask import Flask, request, send_file, jsonify
+import instasave
 import os
 import uuid
-from insta_downloader import InstaDownloader
 
 app = Flask(__name__)
 
@@ -17,25 +17,25 @@ def download_insta_media():
         return jsonify({"error": "No URL provided"}), 400
 
     try:
-        # Generate a unique filename
-        unique_id = str(uuid.uuid4())
-        downloader = InstaDownloader()
+        # Use instasave to download media
+        media_path = instasave.download(insta_url, DOWNLOAD_DIR)
+        
+        if not media_path:
+            return jsonify({"error": "Failed to download media"}), 500
 
-        # Download media using insta-downloader
-        media = downloader.download_post(insta_url)
+        # Determine the file extension based on the downloaded file
+        file_extension = os.path.splitext(media_path)[-1]
+        
+        # Send the media file as a response
+        response = send_file(media_path, as_attachment=True)
 
-        if media:
-            media_path = media[0]  # Get the first media item (could be a video or image)
-            response = send_file(media_path, as_attachment=True)
-
-            # Schedule file deletion after sending
-            @response.call_on_close
-            def cleanup():
+        # Delete the file after sending
+        @response.call_on_close
+        def cleanup():
+            if os.path.exists(media_path):
                 os.remove(media_path)
 
-            return response
-
-        return jsonify({"error": "Failed to download media"}), 500
+        return response
 
     except Exception as e:
         print(f"Error: {e}")
