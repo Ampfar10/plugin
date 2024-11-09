@@ -1,35 +1,43 @@
+const { MessageType, Mimetype } = require('@whiskeysockets/baileys');
 const fs = require('fs');
 const path = require('path');
 
-module.exports = {
-    name: 'img',
-    description: 'Converts raw binary text to an image and sends it',
-    category: 'Utility',
-    async execute(conn, chatId, args) {
-        try {
-            if (!args || args.length === 0) {
-                await conn.sendMessage(chatId, { text: 'Please provide the binary image data.' });
+async function handleImageCommand(msg) {
+    const content = msg.body.trim();
+    
+    // Check if the content starts with 'data:image' (Base64 image data)
+    if (content.startsWith('data:image')) {
+        // Extract the Base64 string from the data URL
+        const base64Data = content.split(',')[1];
+
+        // Decode the Base64 string into binary
+        const buffer = Buffer.from(base64Data, 'base64');
+
+        // Define the file path for saving the image
+        const filePath = path.join(__dirname, 'temp_image.png');
+
+        // Save the image to a temporary file
+        fs.writeFile(filePath, buffer, (err) => {
+            if (err) {
+                console.error('Error writing image to file:', err);
+                msg.reply('Sorry, there was an error processing the image.');
                 return;
             }
 
-            // Convert the raw binary string to a Buffer
-            const binaryString = args.join(" ");
-            const binaryData = Buffer.from(binaryString, 'binary');
-
-            // Define file path for the image
-            const filePath = path.join(__dirname, 'image.png');
-
-            // Write the binary data to a PNG file
-            fs.writeFileSync(filePath, binaryData);
-
-            // Send the image file
-            await conn.sendMessage(chatId, { image: { url: filePath }, caption: 'Here is your image!' });
-
-            // Clean up the file after sending
-            fs.unlinkSync(filePath);
-        } catch (error) {
-            console.error('Error converting binary data to image:', error);
-            await conn.sendMessage(chatId, { text: 'An error occurred while converting the data to an image.' });
-        }
+            // Send the image back as a reply
+            msg.reply({ 
+                url: filePath, 
+                mimetype: Mimetype.png 
+            });
+        });
+    } else {
+        msg.reply('Please provide a valid Base64 image string.');
     }
+}
+
+// Register the command
+module.exports = {
+    name: 'img',
+    category: 'Utilities',
+    execute: handleImageCommand
 };
