@@ -34,7 +34,9 @@ module.exports = {
 
             // Final message and kick
             await conn.sendMessage(chatId, { text: `Goodbye @${mentionedUser}` });
-            await conn.groupRemove(chatId, [mentionedUser]);
+
+            // Remove user from group
+            await conn.groupParticipantsUpdate(chatId, [mentionedUser], 'remove');
 
         } catch (error) {
             console.error('Error executing kick command:', error);
