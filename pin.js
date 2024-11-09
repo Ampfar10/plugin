@@ -17,10 +17,10 @@ module.exports = {
             const response = await axios.get(apiUrl);
             const data = response.data;
 
-            if (data && data.imageUrl) {
-                const caption = `Title: ${data.title}\nBy: ${data.pinner.name} (@${data.pinner.username})`;
+            if (data && data.original) {
+                const caption = `Title: ${data.title}\nBy: ${data.pinner.name} (@${data.pinner.username})\nPinterest URL: ${data.url}`;
                 await conn.sendMessage(chatId, { text: 'Downloading image from Pinterest...' });
-                await conn.sendMessage(chatId, { image: { url: data.imageUrl }, caption: caption });
+                await conn.sendMessage(chatId, { image: { url: data.original }, caption: caption });
             } else {
                 await conn.sendMessage(chatId, { text: 'No image found for the provided query. Please try a different one.' });
             }
