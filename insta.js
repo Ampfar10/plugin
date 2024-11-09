@@ -17,11 +17,12 @@ module.exports = {
             const response = await axios.get(apiUrl);
             const data = response.data;
 
-            if (data.url) {
-                await conn.sendMessage(chatId, { text: `Downloading video from Instagram...` });
-                await conn.sendMessage(chatId, { video: { url: data.url }, caption: 'Here is your Instagram video!' });
+            if (data.urls && data.urls.length > 0) {
+                const videoUrl = data.urls.find(item => item.type === 'video').url;
+                await conn.sendMessage(chatId, { text: 'Downloading video from Instagram...' });
+                await conn.sendMessage(chatId, { video: { url: videoUrl }, caption: `Video by ${data.username}` });
             } else {
-                await conn.sendMessage(chatId, { text: 'No video found for the given URL. Please check the link.' });
+                await conn.sendMessage(chatId, { text: 'No video found for the provided URL. Please check the link.' });
             }
         } catch (error) {
             console.error('Error fetching Instagram video:', error);
