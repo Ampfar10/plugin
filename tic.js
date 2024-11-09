@@ -158,6 +158,7 @@ module.exports = {
                     const filePath = await renderBoard();
                     await conn.sendMessage(chatId, { image: { url: filePath }, caption: 'You win!' });
                     isGameOver = true;
+                    fs.unlinkSync(filePath);  // Delete the image after sending
                     return;
                 }
 
@@ -165,6 +166,7 @@ module.exports = {
                     const filePath = await renderBoard();
                     await conn.sendMessage(chatId, { image: { url: filePath }, caption: 'It\'s a tie!' });
                     isGameOver = true;
+                    fs.unlinkSync(filePath);  // Delete the image after sending
                     return;
                 }
 
@@ -175,11 +177,13 @@ module.exports = {
                     const filePath = await renderBoard();
                     await conn.sendMessage(chatId, { image: { url: filePath }, caption: 'AI wins!' });
                     isGameOver = true;
+                    fs.unlinkSync(filePath);  // Delete the image after sending
                     return;
                 }
 
                 const filePath = await renderBoard();
                 await conn.sendMessage(chatId, { image: { url: filePath }, caption: 'Your move!' });
+                fs.unlinkSync(filePath);  // Delete the image after sending
             } else {
                 // Start a new game
                 gameBoard = Array(9).fill(null);
