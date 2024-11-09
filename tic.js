@@ -3,7 +3,7 @@ const fs = require('fs');
 const path = require('path');
 
 let gameBoard = Array(9).fill(null); // 9 cells
-let currentPlayer = 'X'; // 'X' goes first
+let currentPlayer = Math.random() < 0.5 ? 'X' : 'O'; // Randomly decide who starts
 let isGameOver = false;
 let gameMoves = []; // Store the moves
 
@@ -52,7 +52,12 @@ function checkWinner(board, player) {
         [0, 4, 8], [2, 4, 6]  // diagonals
     ];
 
-    return winPatterns.some(pattern => pattern.every(index => board[index] === player));
+    for (const pattern of winPatterns) {
+        if (pattern.every(index => board[index] === player)) {
+            return pattern;  // Return the winning combination
+        }
+    }
+    return null;
 }
 
 // Function to render the board with canvas
@@ -78,7 +83,7 @@ const renderBoard = async () => {
         ctx.stroke();
     }
 
-    // Draw X's and O's
+    // Draw X's, O's, and numbers
     gameBoard.forEach((cell, index) => {
         const x = (index % 3) * cellSize + cellSize / 2;
         const y = Math.floor(index / 3) * cellSize + cellSize / 2;
@@ -91,8 +96,32 @@ const renderBoard = async () => {
             ctx.font = '100px sans-serif';
             ctx.fillStyle = '#0000ff'; // blue color
             ctx.fillText('O', x - 35, y + 35);
+        } else {
+            ctx.font = '30px sans-serif';
+            ctx.fillStyle = '#000'; // black color
+            ctx.fillText(index + 1, x - 15, y + 35); // Draw numbers 1-9 on empty cells
         }
     });
+
+    // Draw line if there's a winner
+    const winningLine = checkWinner(gameBoard, 'X') || checkWinner(gameBoard, 'O');
+    if (winningLine) {
+        ctx.strokeStyle = '#00FF00'; // Green color for the winning line
+        ctx.lineWidth = 5;
+        const [a, b, c] = winningLine;
+        const ax = (a % 3) * cellSize + cellSize / 2;
+        const ay = Math.floor(a / 3) * cellSize + cellSize / 2;
+        const bx = (b % 3) * cellSize + cellSize / 2;
+        const by = Math.floor(b / 3) * cellSize + cellSize / 2;
+        const cx = (c % 3) * cellSize + cellSize / 2;
+        const cy = Math.floor(c / 3) * cellSize + cellSize / 2;
+
+        ctx.beginPath();
+        ctx.moveTo(ax, ay);
+        ctx.lineTo(bx, by);
+        ctx.lineTo(cx, cy);
+        ctx.stroke();
+    }
 
     const filePath = path.join(__dirname, 'tictactoe-board.png');
     const buffer = canvas.toBuffer('image/png');
@@ -124,7 +153,8 @@ module.exports = {
                 currentPlayer = 'O';
                 gameMoves.push(move + 1);
 
-                if (checkWinner(gameBoard, 'X')) {
+                const winner = checkWinner(gameBoard, 'X');
+                if (winner) {
                     const filePath = await renderBoard();
                     await conn.sendMessage(chatId, { image: { url: filePath }, caption: 'You win!' });
                     isGameOver = true;
@@ -140,7 +170,8 @@ module.exports = {
 
                 aiMove(); // AI plays after player
 
-                if (checkWinner(gameBoard, 'O')) {
+                const aiWinner = checkWinner(gameBoard, 'O');
+                if (aiWinner) {
                     const filePath = await renderBoard();
                     await conn.sendMessage(chatId, { image: { url: filePath }, caption: 'AI wins!' });
                     isGameOver = true;
@@ -152,10 +183,10 @@ module.exports = {
             } else {
                 // Start a new game
                 gameBoard = Array(9).fill(null);
-                currentPlayer = 'X';
+                currentPlayer = Math.random() < 0.5 ? 'X' : 'O'; // Randomly decide who starts
                 gameMoves = [];
                 isGameOver = false;
-                await conn.sendMessage(chatId, { text: 'New game started! Make your move using !tictactoe move <1-9>' });
+                await conn.sendMessage(chatId, { text: `New game started! ${currentPlayer === 'X' ? 'You' : 'AI'} start! Make your move using !tictactoe move <1-9>` });
             }
         } catch (error) {
             console.error('Error in Tic-Tac-Toe game:', error);
