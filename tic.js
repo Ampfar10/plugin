@@ -106,7 +106,7 @@ const renderBoard = async () => {
 };
 
 const updateLeaderboard = (result) => {
-    const lbPath = path.join(__dirname, 'ttt-lb.json');
+    const lbPath = path.join(__dirname, '../ttt-lb.json');
     try {
         const data = fs.readFileSync(lbPath, 'utf-8');
         leaderboard = JSON.parse(data);
