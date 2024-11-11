@@ -34,7 +34,7 @@ module.exports = {
 
         // Check if a specific command name was provided
         if (args.length > 0) {
-            const commandName = args[0].toLowerCase();
+            const commandName = command.name;
             let commandDetails;
 
             // Search for the command in all categories
