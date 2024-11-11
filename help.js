@@ -39,16 +39,16 @@ module.exports = {
 
             // Search for the command in all categories
             for (let [_, commands] of categorizedCommands) {
-                commandDetails = commands.find(cmd => cmd.name.toLowerCase() === commandName);
+                commandDetails = commands.find(cmd => cmd.name.toLowerCase() === command.name);
                 if (commandDetails) break;
             }
 
             if (commandDetails) {
                 // Show specific command details
-                const commandInfo = `📄 *Command:* ${commandDetails.name}\n` +
-                    `📝 *Description:* ${commandDetails.description || 'No description available.'}\n` +
-                    `📂 *Category:* ${commandDetails.category}\n` +
-                    `💡 *Usage:* ${commandDetails.usage || 'No usage info available.'}\n`;
+                const commandInfo = `📄 *Command:* ${command.name}\n` +
+                    `📝 *Description:* ${command.description || 'No description available.'}\n` +
+                    `📂 *Category:* ${command.category}\n` +
+                    `💡 *Usage:* ${command.usage || 'No usage info available.'}\n`;
 
                 await conn.sendMessage(chatId, {
                     text: commandInfo,
