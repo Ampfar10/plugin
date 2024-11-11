@@ -68,7 +68,7 @@ module.exports = {
             categorizedCommands.forEach((commands, category) => {
                 helpMessage += `📂 *${category}*\n`; // Emoji for each category
                 commands.forEach(command => {
-                    helpMessage += `🔹*${command.name}* \n`;
+                    helpMessage += ` 💠 *${command.name}* \n`;
                 });
                 helpMessage += '\n';
             });
