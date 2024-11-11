@@ -1,6 +1,6 @@
 const fs = require('fs');
 const path = require('path');
-const fetch = require('node-fetch');
+const fetch = require('node-fetch'); // Import fetch for retrieving images
 
 module.exports = {
     name: 'help',
@@ -16,7 +16,7 @@ module.exports = {
 
             commandFiles.forEach(file => {
                 const command = require(`../commands/${file}`);
-
+                
                 // Group commands by category
                 if (!categorizedCommands.has(command.category)) {
                     categorizedCommands.set(command.category, []);
@@ -25,8 +25,8 @@ module.exports = {
             });
         } catch (error) {
             console.error('Error loading commands:', error);
-            await conn.sendMessage(chatId, {
-                text: '⚠️ An error occurred while loading commands. Please try again later.',
+            await conn.sendMessage(chatId, { 
+                text: '⚠️ An error occurred while loading commands. Please try again later.', 
                 mentions: [senderId]
             });
             return;
@@ -34,31 +34,31 @@ module.exports = {
 
         // Check if a specific command name was provided
         if (args.length > 0) {
-            const commandName = command.name;
+            const commandName = args[0].toLowerCase();
             let commandDetails;
 
             // Search for the command in all categories
             for (let [_, commands] of categorizedCommands) {
-                commandDetails = commands.find(cmd => cmd.name.toLowerCase() === command.name);
+                commandDetails = commands.find(cmd => cmd.name.toLowerCase() === commandName);
                 if (commandDetails) break;
             }
 
             if (commandDetails) {
                 // Show specific command details
-                const commandInfo = `📄 *Command:* ${command.name}\n` +
-                    `📝 *Description:* ${command.description || 'No description available.'}\n` +
-                    `📂 *Category:* ${command.category}\n` +
-                    `💡 *Usage:* ${command.usage || 'No usage info available.'}\n`;
+                const commandInfo = `📄 *Command:* ${commandDetails.name}\n` +
+                    `📝 *Description:* ${commandDetails.description || 'No description available.'}\n` +
+                    `📂 *Category:* ${commandDetails.category}\n` +
+                    `💡 *Usage:* ${commandDetails.usage || 'No usage info available.'}\n`;
 
-                await conn.sendMessage(chatId, {
-                    text: commandInfo,
-                    mentions: [senderId]
+                await conn.sendMessage(chatId, { 
+                    text: commandInfo, 
+                    mentions: [senderId] 
                 });
             } else {
                 // Command not found message
-                await conn.sendMessage(chatId, {
-                    text: `⚠️ Command '${commandName}' not found. Use *help* to view all commands.`,
-                    mentions: [senderId]
+                await conn.sendMessage(chatId, { 
+                    text: `⚠️ Command '${commandName}' not found. Use *help* to view all commands.`, 
+                    mentions: [senderId] 
                 });
             }
         } else {
@@ -66,7 +66,7 @@ module.exports = {
             let helpMessage = '🤖 *Bot Command List* 🤖\n\n';
 
             categorizedCommands.forEach((commands, category) => {
-                helpMessage += `📂 *${category}*\n`;
+                helpMessage += `📂 *${category}*\n`; // Emoji for each category
                 commands.forEach(command => {
                     helpMessage += ` 💠 *${command.name}* \n`;
                 });
@@ -76,8 +76,8 @@ module.exports = {
             // Add example usage note
             helpMessage += '💡 *Example usage:* Type `help <command name>` (e.g., `help ping`).\n\n';
 
-            // Image URL for the help list
-            const imageUrl = 'https://wallpapers.com/images/high/naruto-uzumaki-4k-cu879u0wieowwdb5.webp';
+            // Fetch a random image URL for the help list
+            const imageUrl = 'https://wallpapers.com/images/high/naruto-uzumaki-4k-cu879u0wieowwdb5.webp'; // Replace with actual image source
 
             // Send help message with image
             await conn.sendMessage(chatId, {
