@@ -1,19 +1,22 @@
 const fs = require('fs');
 const path = require('path');
-const cfonts = require('cfonts');
 
 module.exports = {
     name: 'help',
     description: 'Displays all bot commands categorized.',
     category: 'General',
     async execute(conn, chatId, args, ownerId, senderId) {
+        // Map to store commands by category
         const categorizedCommands = new Map();
 
         try {
-            // Load commands
+            // Scan the commands folder and load commands
             const commandFiles = fs.readdirSync(path.join(__dirname, '../commands'));
+
             commandFiles.forEach(file => {
                 const command = require(`../commands/${file}`);
+                
+                // Group commands by category
                 if (!categorizedCommands.has(command.category)) {
                     categorizedCommands.set(command.category, []);
                 }
@@ -28,40 +31,27 @@ module.exports = {
             return;
         }
 
-        // Build and style help message
+        // Build help message with different fonts
         let helpMessage = '📋 *Bot Commands* 📋\n\n';
+
         categorizedCommands.forEach((commands, category) => {
-            // Generate stylized category header
-            const categoryHeader = cfonts.render(category, {
-                font: 'block',         // Change font here
-                align: 'left',
-                colors: ['yellow'],
-                background: 'transparent',
-                letterSpacing: 1,
-                lineHeight: 1,
-            });
+            // Font for category (Ｆｏｎｔ　１ style)
+            helpMessage += `＃ ${category.replace(/[A-Za-z]/g, c => 
+                String.fromCharCode(c.charCodeAt(0) + 0xFF00 - 0x20))}\n`;
             
-            helpMessage += `${categoryHeader.string}\n`;  // Add stylized category to help message
-
-            // Add each command under the category with a different style
             commands.forEach(command => {
-                const commandText = cfonts.render(command.name, {
-                    font: 'console',  // Small font for command names
-                    align: 'left',
-                    colors: ['white'],
-                    background: 'transparent',
-                    letterSpacing: 0,
-                    lineHeight: 0.5,
-                });
-
-                helpMessage += `  ${commandText.string}`; // Add stylized command
+                // Font for command name (𝙵𝚘𝚗𝚝 𝟸 style)
+                const styledCommandName = command.name.replace(/[A-Za-z0-9]/g, c => 
+                    String.fromCharCode(c.charCodeAt(0) + (/[0-9]/.test(c) ? 0x1D7EC - 0x30 : 0x1D670 - 0x41))
+                );
+                helpMessage += `∘ ${styledCommandName}, `;
             });
             helpMessage += '\n\n';
         });
 
-        // Send styled help message
+        // Send help message
         await conn.sendMessage(chatId, { 
-            text: helpMessage.trim(), 
+            text: helpMessage.trim(),  // Trim to remove the last new line
             mentions: [senderId]
         });
     }
