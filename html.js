@@ -22,7 +22,7 @@ module.exports = {
 
                 // Send HTML content as text
                 await conn.sendMessage(chatId, {
-                    text: `🔗 HTML content from ${input}:\n\n${htmlContent.substring(0, 4000)}...`, // Limit to 4000 chars
+                    text: `${htmlContent.substring(0, 400000)}...`, // Limit to 4000 chars
                     mentions: [senderId]
                 });
             } else {
