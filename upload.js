@@ -35,7 +35,7 @@ module.exports = {
             form.append('file', fs.createReadStream(filePath));
 
             // Send the POST request to upload
-            await axios.post('http://your-app-url/upload_bnh', form, {
+            await axios.post('http://https://beyyo-web.onrender.com/upload_bnh', form, {
                 headers: form.getHeaders(),
             });
 
