@@ -24,7 +24,7 @@ module.exports = {
 
             // Set viewport for better screenshot control (optional)
             await page.setViewport({ width: 1280, height: 720 });
-            await page.goto(url, { waitUntil: 'load', timeout: 60000 });
+            await page.goto(url, { waitUntil: 'networkidle2', timeout: 600000 });
 
             // Take a screenshot
             const screenshotPath = path.join(__dirname, '../screenshots', `screenshot_${Date.now()}.png`);
