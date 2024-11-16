@@ -3,7 +3,7 @@ const axios = require('axios');
 module.exports = {
     name: 'play',
     description: 'Plays a song by searching for it and sending the audio.',
-    category: '🎵 Music',
+    category: '🗂️Media',
     async execute(conn, chatId, args, senderId) {
         // Check if a song name or artist is provided
         if (!args.length) {
@@ -53,6 +53,7 @@ module.exports = {
                 audio: { url: audioUrl },
                 mimetype: 'audio/mp4',
                 ptt: false,
+                mentions: [senderId]
                 contextInfo: {
                     externalAdReply: {
                         title: firstResult.title,
