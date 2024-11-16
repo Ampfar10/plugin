@@ -53,7 +53,6 @@ module.exports = {
                 audio: { url: audioUrl },
                 mimetype: 'audio/mp4',
                 ptt: false,
-                mentions: [senderId],
                 contextInfo: {
                     externalAdReply: {
                         title: firstResult.title,
