@@ -62,7 +62,7 @@ module.exports = {
                 views: firstResult.views || 'Unknown views',
             };
 
-            const downloadDir = path.join(process.cwd(), 'downloads');
+            const downloadDir = path.join(__dirname, '../downloads');
             await fs.mkdir(downloadDir, { recursive: true });
             const output = path.join(downloadDir, `${Date.now()}.m4a`);
 
