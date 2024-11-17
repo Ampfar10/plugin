@@ -1,7 +1,7 @@
 module.exports = {
     name: 'join',
     description: 'Joins a WhatsApp group using the provided invite link.',
-    category: '🎉Group',
+    category: '🌊Group',
     async execute(conn, chatId, args, senderId) {
         if (args.length === 0) {
             return conn.sendMessage(chatId, {
