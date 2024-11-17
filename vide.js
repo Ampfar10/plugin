@@ -46,21 +46,23 @@ module.exports = {
                 });
             }
 
-            const videoUrl = videoResponse.data.data.vudio_url;
+            const videoUrl = videoResponse.data.data.video_url; // Fixed typo
 
-            // Step 3: Send the audio with metadata
+            // Step 3: Send the video with metadata
             await conn.sendMessage(chatId, {
                 video: { url: videoUrl },
-                caption: '🎥 Here is your video!',
+                caption: `🎥 Here is your video!\n\n*Title:* ${firstResult.title}\n*Description:* ${firstResult.description || 'No description available'}`,
                 mimetype: 'video/mp4',
-                mentions: [senderId]
+                mentions: [senderId],
+                quoted: msg, // Added to quote the user's command
             });
 
         } catch (error) {
             console.error('Error fetching the song:', error);
             conn.sendMessage(chatId, { 
                 text: '⚠️ An error occurred while fetching the song.', 
-                mentions: [senderId] 
+                mentions: [senderId],
+                quoted: msg 
             });
         }
     },
