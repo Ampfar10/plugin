@@ -1,7 +1,7 @@
 Output: const axios = require('axios');
 
 module.exports = {
-    name: 'play',
+    name: 'yta',
     description: 'Plays a song by searching for it and sending the audio.',
     category: '🗂️Media',
     async execute(conn, chatId, args, senderId, msg) {
