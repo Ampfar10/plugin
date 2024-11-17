@@ -8,7 +8,7 @@ module.exports = {
         // Check if a song name or artist is provided
         if (!args.length) {
             return conn.sendMessage(chatId, { 
-                text: '🎵 Please provide a query.', 
+                text: '🎵 Please provide a query or a youtube link to get the video.', 
                 quoted: msg 
             });
         }
