@@ -4,12 +4,12 @@ module.exports = {
     name: 'play',
     description: 'Plays a song by searching for it and sending the audio.',
     category: '🗂️Media',
-    async execute(conn, chatId, args, senderId) {
+    async execute(conn, chatId, args, senderId, msg) {
         // Check if a song name or artist is provided
         if (!args.length) {
             return conn.sendMessage(chatId, { 
                 text: '🎵 Please provide a song name or artist to search.', 
-                mentions: [senderId] 
+                quoted: msg 
             });
         }
 
@@ -23,7 +23,7 @@ module.exports = {
             if (!searchResponse.data || !searchResponse.data.data || !searchResponse.data.data.length) {
                 return conn.sendMessage(chatId, { 
                     text: '⚠️ Sorry, I couldn’t find the song.', 
-                    mentions: [senderId] 
+                    quoted: msg 
                 });
             }
 
@@ -31,18 +31,18 @@ module.exports = {
 
             // Inform the user the song is being processed
             await conn.sendMessage(chatId, { 
-                text: `🎧 Fetching *${firstResult.title}* for you. Please wait...`, 
-                mentions: [senderId] 
+                text: `🎧 Fetching *${firstResult.title}* for you. Please wait...`,
+                quoted: msg 
             });
 
             // Step 2: Fetch the audio file URL from the Miyan API
             const songUrl = `https://miyanapi.vercel.app/youtube?url=${encodeURIComponent(firstResult.url)}`;
             const songResponse = await axios.get(songUrl);
-
+            
             if (!songResponse.data || !songResponse.data.data || !songResponse.data.data.audio_url) {
                 return conn.sendMessage(chatId, { 
                     text: '⚠️ Sorry, I couldn’t fetch the audio file.', 
-                    mentions: [senderId] 
+                    quoted: msg 
                 });
             }
 
