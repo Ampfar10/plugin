@@ -1,7 +1,7 @@
 const axios = require('axios');
 
 module.exports = {
-    name: 'video',
+    name: 'ytv',
     description: 'Plays a song by searching for it and sending the audio.',
     category: '🗂️Media',
     async execute(conn, chatId, args, senderId, msg) {
@@ -55,10 +55,20 @@ module.exports = {
                 mimetype: 'video/mp4',
                 mentions: [senderId],
                 quoted: msg, // Added to quote the user's command
+                contextInfo: {
+                    externalAdReply: {
+                        title: firstResult.title,
+                        body: `${firstResult.description || 'No description available'}`,
+                        mediaType: 2, // Media type for a YouTube video
+                        thumbnailUrl: firstResult.thumbnail,
+                        renderLargerThumbnail: true,
+                        mediaUrl: firstResult.url,
+                    },
+                },
             });
 
         } catch (error) {
-            console.error('Error fetching the song:', error);
+            console.error('Error fetching the video:', error);
             conn.sendMessage(chatId, { 
                 text: '⚠️ An error occurred while fetching the song.', 
                 mentions: [senderId],
