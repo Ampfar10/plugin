@@ -51,7 +51,7 @@ module.exports = {
             // Step 3: Send the video with metadata
             await conn.sendMessage(chatId, {
                 video: { url: videoUrl },
-                caption: `🎥 Here is your video!\n\n*Title:* ${firstResult.title}\n*Description:* ${firstResult.description || 'No description available'}`,
+                caption: `🎥 Here is your video`,
                 mimetype: 'video/mp4',
                 mentions: [senderId],
                 quoted: msg, // Added to quote the user's command
