@@ -39,7 +39,7 @@ module.exports = {
             const songUrl = `https://miyanapi.vercel.app/youtube?url=${encodeURIComponent(firstResult.url)}`;
             const videoResponse = await axios.get(songUrl);
             
-            if (!videoResponse.data || !videoResponse.data.data || !songResponse.data.data.video_url) {
+            if (!videoResponse.data || !videoResponse.data.data || !videoResponse.data.data.video_url) {
                 return conn.sendMessage(chatId, { 
                     text: '⚠️ Sorry, I couldn’t fetch the video file.', 
                     quoted: msg 
