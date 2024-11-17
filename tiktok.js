@@ -26,9 +26,9 @@ async function ensureDownloadDirectory() {
 }
 
 module.exports = {
-    name: 'tkdl',
+    name: 'tiktok',
     description: 'Download TikTok videos without watermark.',
-    category: 'Media',
+    category: '🗂️Media',
     async execute(conn, chatId, args, senderId) {
         const query = args.join(' ').trim();
 
