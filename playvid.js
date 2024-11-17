@@ -1,7 +1,7 @@
 const axios = require('axios');
 
 module.exports = {
-    name: 'play',
+    name: 'playvid',
     description: 'Plays a song by searching for it and sending the audio.',
     category: '🗂️Media',
     async execute(conn, chatId, args, senderId, msg) {
@@ -51,7 +51,7 @@ module.exports = {
             // Step 3: Send the audio with metadata
             await conn.sendMessage(chatId, {
                 video: { url: videoUrl },
-                caption: caption: '🎥 Here is your video!',
+                caption: '🎥 Here is your video!',
                 mimetype: 'video/mp4',
                 quoted: msg,
                 mentions: [senderId],
