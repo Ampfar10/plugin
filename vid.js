@@ -8,7 +8,7 @@ module.exports = {
         // Check if a song name or artist is provided
         if (!args.length) {
             return conn.sendMessage(chatId, { 
-                text: '🎵 Please provide a song name or artist to search.', 
+                text: '🎵 Please provide a query.', 
                 quoted: msg 
             });
         }
@@ -53,17 +53,7 @@ module.exports = {
                 video: { url: videoUrl },
                 caption: '🎥 Here is your video!',
                 mimetype: 'video/mp4',
-                quoted: msg,
-                mentions: [senderId],
-                contextInfo: {
-                    externalAdReply: {
-                        title: firstResult.title,
-                        body: `${firstResult.description || 'No description available'}`,
-                        mediaType: 2, // Media type for a YouTube video
-                        thumbnailUrl: firstResult.thumbnail,
-                        renderLargerThumbnail: true,
-                        mediaUrl: firstResult.url,
-                    },
+                mentions: [senderId]
                 },
             });
 
