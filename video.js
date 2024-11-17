@@ -1,7 +1,7 @@
 const axios = require('axios');
 
 module.exports = {
-    name: 'playvid',
+    name: 'video',
     description: 'Plays a song by searching for it and sending the audio.',
     category: '🗂️Media',
     async execute(conn, chatId, args, senderId, msg) {
@@ -54,7 +54,6 @@ module.exports = {
                 caption: '🎥 Here is your video!',
                 mimetype: 'video/mp4',
                 mentions: [senderId]
-                },
             });
 
         } catch (error) {
