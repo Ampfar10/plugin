@@ -9,12 +9,8 @@ module.exports = {
         const g = messages[0];
         const quotedMessage = g.message?.extendedTextMessage?.contextInfo?.quotedMessage;
 
-        if (!quotedMessage) {
-            return conn.sendMessage(chatId, {
-                text: "❌ Please reply to a message to quote it.",
-                mentions: [senderId],
-            });
-        }
+
+        
 
         const quotedMessageType = Object.keys(quotedMessage)[0];
 
