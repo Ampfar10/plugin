@@ -6,8 +6,8 @@ module.exports = {
     description: 'Reply to a message to quote it in the chat.',
     category: '⛩️General',
     async execute(conn, chatId, args, senderId, m) {
-        const m = messages[0];
-        const quotedMessage = m.message?.extendedTextMessage?.contextInfo?.quotedMessage;
+        const msg = messages[0];
+        const quotedMessage = msg.message?.extendedTextMessage?.contextInfo?.quotedMessage;
 
         if (!quotedMessage) {
             return conn.sendMessage(chatId, {
