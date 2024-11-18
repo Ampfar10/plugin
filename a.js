@@ -4,7 +4,7 @@ const path = require('path');
 module.exports = {
     name: 'quote',
     description: 'Reply to a message to quote it in the chat.',
-    category: '🗂️General',
+    category: '⛩️General',
     async execute(conn, chatId, args, senderId, m) {
         const quotedMessage = m.message?.extendedTextMessage?.contextInfo?.quotedMessage;
 
