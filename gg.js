@@ -9,7 +9,7 @@ module.exports = {
         const msg = messages[0];
 
         // Debugging: Log the full message structure
-        console.log('Received message:', JSON.stringify(msg, null, 2));
+        console.log('Received message:', JSON.stringify(msg));
 
         const quotedMessage = msg.message?.extendedTextMessage?.contextInfo?.quotedMessage;
 
