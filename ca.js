@@ -10,14 +10,6 @@ module.exports = {
         // Check if the message is a reply
         const quotedMessage = message?.message?.extendedTextMessage?.contextInfo?.quotedMessage;
 
-        if (!quotedMessage) {
-            // If no message was replied to
-            return await conn.sendMessage(chatId, {
-                text: "❌ Please reply to a message when using the quote command.",
-                mentions: [senderId],
-            });
-        }
-
         const quotedMessageType = Object.keys(quotedMessage)[0];
 
         try {
