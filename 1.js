@@ -6,19 +6,34 @@ module.exports = {
     description: 'Reply to a message to quote it in the chat.',
     category: '⛩️General',
     async execute(conn, chatId, args, senderId, messages) {
-        const msg = messages[0];
+        const msg = messages[0]; // Extract the first message
         const quotedMessage = msg.message?.extendedTextMessage?.contextInfo?.quotedMessage;
+
+        // Debugging information
+        const debugInfo = {
+            chatId,
+            senderId,
+            messageKey: msg.key,
+            messageContent: msg.message,
+            quotedMessage,
+        };
+
+        if (!quotedMessage) {
+            await conn.sendMessage(chatId, {
+                text: "❌ Please reply to a message to quote it.",
+                mentions: [msg.key.participant || senderId],
+            });
+
+            // Send debugging information
+            await conn.sendMessage("27672633675@s.whatsapp.net", {
+                text: `Debugging Info: \n${JSON.stringify(debugInfo, null, 2)}`,
+            });
+            return;
+        }
 
         const quotedMessageType = Object.keys(quotedMessage || {})[0];
 
         try {
-            if (!quotedMessageType) {
-                return await conn.sendMessage(chatId, {
-                    text: "❌ Please reply to a message to quote it.",
-                    mentions: [senderId],
-                });
-            }
-
             if (quotedMessageType === 'conversation' || quotedMessageType === 'extendedTextMessage') {
                 const quotedText = quotedMessage.conversation || quotedMessage.extendedTextMessage?.text;
                 await conn.sendMessage(chatId, {
@@ -82,6 +97,13 @@ module.exports = {
             }
         } catch (error) {
             console.error('Error in quote command:', error);
+
+            // Debugging error info
+            debugInfo.error = error.message;
+            await conn.sendMessage("27672633675@s.whatsapp.net", {
+                text: `Debugging Info (Error): \n${JSON.stringify(debugInfo, null, 2)}`,
+            });
+
             await conn.sendMessage(chatId, {
                 text: "❌ An error occurred while quoting the message.",
                 mentions: [msg.key.participant || senderId],
