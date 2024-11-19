@@ -10,11 +10,11 @@ module.exports = {
 
         // Debugging: Log the full message structure
         console.log('Received message:', JSON.stringify(msg));
-
+        console.log("Received message context:", util.inspect(m, { showHidden: false, depth: null, colors: true }));
         const quotedMessage = msg.message?.extendedTextMessage?.contextInfo?.quotedMessage;
 
         // Debugging: Log the quoted message structure
-        console.log('Quoted message:', JSON.stringify(quotedMessage, null, 2));
+       // console.log('Quoted message:', JSON.stringify(quotedMessage, null, 2));
 
         if (!quotedMessage) {
             return await conn.sendMessage(chatId, {
