@@ -1,7 +1,6 @@
 const fs = require('fs');
 const path = require('path');
-const axios = require('axios');
-const cheerio = require('cheerio');
+const puppeteer = require('puppeteer');
 
 module.exports = {
     name: 'mediafire',
@@ -23,55 +22,56 @@ module.exports = {
         });
 
         try {
-            // Fetch the MediaFire page with proper headers
-            const response = await axios.get(mediafireUrl, {
-                headers: {
-                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36',
-                },
+            // Launch Puppeteer
+            const browser = await puppeteer.launch({ headless: true });
+            const page = await browser.newPage();
+
+            // Go to the MediaFire URL
+            await page.goto(mediafireUrl, {
+                waitUntil: 'networkidle2',
             });
 
-            const $ = cheerio.load(response.data);
+            // Wait for the download button
+            await page.waitForSelector('a#downloadButton', { timeout: 10000 });
 
-            // Extract the direct download link
-            const downloadLink = $('a#downloadButton').attr('href');
-            const filename = downloadLink.split('/').pop().split('?')[0];
+            // Extract the download link
+            const downloadLink = await page.$eval('a#downloadButton', (el) =>
+                el.getAttribute('href')
+            );
 
             if (!downloadLink) {
-                return conn.sendMessage(chatId, {
-                    text: '⚠️ Unable to fetch the download link. Please check the URL.',
-                    mentions: [senderId],
-                });
+                throw new Error('Download link not found.');
             }
 
-            // Set up download directory
+            const filename = decodeURIComponent(downloadLink.split('/').pop().split('?')[0]);
+
+            // Close Puppeteer
+            await browser.close();
+
+            // Download the file
             const downloadDir = path.join(process.cwd(), 'downloads');
             if (!fs.existsSync(downloadDir)) {
                 fs.mkdirSync(downloadDir, { recursive: true });
             }
             const filePath = path.join(downloadDir, filename);
 
-            // Notify the user
             await conn.sendMessage(chatId, {
                 text: `📂 Downloading *${filename}*...`,
                 mentions: [senderId],
             });
 
-            // Download the file with proper headers
-            const fileResponse = await axios({
+            const response = await axios({
                 url: downloadLink,
                 method: 'GET',
                 responseType: 'stream',
-                headers: {
-                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36',
-                },
             });
 
-            const fileStream = fs.createWriteStream(filePath);
-            fileResponse.data.pipe(fileStream);
+            const writer = fs.createWriteStream(filePath);
+            response.data.pipe(writer);
 
             await new Promise((resolve, reject) => {
-                fileStream.on('finish', resolve);
-                fileStream.on('error', reject);
+                writer.on('finish', resolve);
+                writer.on('error', reject);
             });
 
             // Send the file to the chat
