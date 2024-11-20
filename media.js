@@ -22,11 +22,18 @@ module.exports = {
         });
 
         try {
-            // Fetch MediaFire page content
-            const response = await fetch(mediafireUrl);
+            // Fetch MediaFire page content with appropriate headers
+            const response = await fetch(mediafireUrl, {
+                headers: {
+                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+                    'Accept-Language': 'en-US,en;q=0.9',
+                },
+            });
+
             if (!response.ok) {
                 throw new Error(`Failed to fetch the MediaFire URL: ${response.statusText}`);
             }
+
             const pageContent = await response.text();
 
             // Extract download link
@@ -37,7 +44,12 @@ module.exports = {
             const downloadLink = downloadLinkMatch[1];
 
             // Fetch file from the download link
-            const fileResponse = await fetch(downloadLink);
+            const fileResponse = await fetch(downloadLink, {
+                headers: {
+                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+                },
+            });
+
             if (!fileResponse.ok) {
                 throw new Error(`Failed to download the file: ${fileResponse.statusText}`);
             }
