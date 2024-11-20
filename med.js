@@ -32,10 +32,10 @@ module.exports = {
             });
 
             // Wait for the download button
-            await page.waitForSelector('a#downloadButton', { timeout: 10000 });
+            await page.waitForSelector('downloadButton', { timeout: 10000 });
 
             // Extract the download link
-            const downloadLink = await page.$eval('a#downloadButton', (el) =>
+            const downloadLink = await page.$eval('downloadButton', (el) =>
                 el.getAttribute('href')
             );
 
