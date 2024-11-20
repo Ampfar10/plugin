@@ -23,8 +23,13 @@ module.exports = {
         });
 
         try {
-            // Fetch the MediaFire page
-            const response = await axios.get(mediafireUrl);
+            // Fetch the MediaFire page with proper headers
+            const response = await axios.get(mediafireUrl, {
+                headers: {
+                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36',
+                },
+            });
+
             const $ = cheerio.load(response.data);
 
             // Extract the direct download link
@@ -51,14 +56,17 @@ module.exports = {
                 mentions: [senderId],
             });
 
-            // Download the file
+            // Download the file with proper headers
             const fileResponse = await axios({
                 url: downloadLink,
                 method: 'GET',
                 responseType: 'stream',
+                headers: {
+                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36',
+                },
             });
-            const fileStream = fs.createWriteStream(filePath);
 
+            const fileStream = fs.createWriteStream(filePath);
             fileResponse.data.pipe(fileStream);
 
             await new Promise((resolve, reject) => {
