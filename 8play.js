@@ -17,15 +17,17 @@ async function ensureDownloadDirectory() {
 }
 
 // Download audio using youtube-dl-exec
-async function downloadAudio(url, output) {
+async function downloadAudio(url, outputDir, fileName) {
     try {
-        console.log(`Downloading audio from ${url}...`);
+        const outputPath = path.join(outputDir, `${fileName}.mp3`);
+        console.log(`Downloading audio to ${outputPath}...`);
         await ytdl(url, {
             extractAudio: true,
             audioFormat: "mp3",
-            output,
+            output: outputPath,
         });
-        console.log(`Audio downloaded: ${output}`);
+        console.log(`Audio downloaded: ${outputPath}`);
+        return outputPath;
     } catch (error) {
         console.error("Error during audio download:", error);
         throw new Error("Failed to download audio.");
@@ -112,27 +114,17 @@ module.exports = {
 
                 const firstResult = searchResponse.videos[0];
                 const downloadDir = await ensureDownloadDirectory();
-                const fileName = sanitizeFileName(firstResult.title);
-                const filePath = path.join(downloadDir, `${fileName}.mp3`);
+                const sanitizedTitle = sanitizeFileName(firstResult.title);
 
                 // Download the audio
-                await downloadAudio(firstResult.url, filePath);
+                const filePath = await downloadAudio(firstResult.url, downloadDir, sanitizedTitle);
 
-                // Check if the file exists before sending
-                try {
-                    await fs.access(filePath);
-                    console.log("File exists:", filePath);
-                } catch (error) {
-                    console.error("File does not exist or is inaccessible:", filePath);
-                    throw new Error("File not found after download.");
-                }
-
+                // Send the audio file
                 await conn.sendMessage(chatId, {
                     text: "🎶 Preparing your song. Please wait...",
                     quoted: msg,
                 });
 
-                // Send the audio file
                 await conn.sendMessage(chatId, {
                     audio: { url: filePath },
                     mimetype: "audio/mp4",
