@@ -1,6 +1,6 @@
 const axios = require("axios");
-const yts = require("yt-search"); // Using yt-search for searching YouTube videos
-const ytdl = require("youtube-dl-exec"); // For fetching audio from YouTube
+const yts = require("yt-search");
+const ytdl = require("youtube-dl-exec");
 const fs = require("fs/promises");
 const path = require("path");
 
@@ -16,10 +16,22 @@ async function ensureDownloadDirectory() {
     return downloadDir;
 }
 
+// Verify file exists
+async function verifyFileExists(filePath) {
+    try {
+        await fs.access(filePath);
+        console.log(`File verified: ${filePath}`);
+        return true;
+    } catch {
+        console.error(`File does not exist: ${filePath}`);
+        return false;
+    }
+}
+
 // Download audio using youtube-dl-exec
 async function downloadAudio(url, outputDir, fileName) {
+    const outputPath = path.join(outputDir, `${fileName}.mp3`);
     try {
-        const outputPath = path.join(outputDir, `${fileName}.mp3`);
         console.log(`Downloading audio to ${outputPath}...`);
         await ytdl(url, {
             extractAudio: true,
@@ -120,6 +132,12 @@ module.exports = {
 
                 // Download the audio
                 const filePath = await downloadAudio(firstResult.url, downloadDir, sanitizedTitle);
+
+                // Ensure file exists
+                const fileExists = await verifyFileExists(filePath);
+                if (!fileExists) {
+                    throw new Error("File not found after download.");
+                }
 
                 // Notify user
                 await conn.sendMessage(chatId, {
