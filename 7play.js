@@ -34,14 +34,16 @@ async function downloadAudio(url, outputDir, fileName) {
     }
 }
 
-// Delete file after sending
-async function deleteFile(filePath) {
-    try {
-        await fs.unlink(filePath);
-        console.log(`File deleted: ${filePath}`);
-    } catch (error) {
-        console.error("Error deleting file:", error);
-    }
+// Delete file after sending (with delay)
+async function deleteFileWithDelay(filePath, delayMs = 60000) {
+    setTimeout(async () => {
+        try {
+            await fs.unlink(filePath);
+            console.log(`File deleted: ${filePath}`);
+        } catch (error) {
+            console.error("Error deleting file:", error);
+        }
+    }, delayMs);
 }
 
 module.exports = {
@@ -119,12 +121,13 @@ module.exports = {
                 // Download the audio
                 const filePath = await downloadAudio(firstResult.url, downloadDir, sanitizedTitle);
 
-                // Send the audio file
+                // Notify user
                 await conn.sendMessage(chatId, {
                     text: "🎶 Preparing your song. Please wait...",
                     quoted: msg,
                 });
 
+                // Send the audio file
                 await conn.sendMessage(chatId, {
                     audio: { url: filePath },
                     mimetype: "audio/mp4",
@@ -141,8 +144,8 @@ module.exports = {
                     },
                 });
 
-                // Delete the file after sending
-                await deleteFile(filePath);
+                // Delete the file after a delay
+                deleteFileWithDelay(filePath);
             } catch (fallbackError) {
                 console.error("Fallback method failed:", fallbackError);
                 return conn.sendMessage(chatId, {
