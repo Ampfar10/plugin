@@ -4,6 +4,11 @@ const ytdl = require("youtube-dl-exec"); // For fetching audio from YouTube
 const fs = require("fs/promises");
 const path = require("path");
 
+// Sanitize file names
+const sanitizeFileName = (name) => {
+    return name.replace(/[<>:"/\\|?*\x00-\x1F]/g, "").substring(0, 200);
+};
+
 // Ensure the download directory exists
 async function ensureDownloadDirectory() {
     const downloadDir = path.join(process.cwd(), "downloads");
@@ -107,10 +112,20 @@ module.exports = {
 
                 const firstResult = searchResponse.videos[0];
                 const downloadDir = await ensureDownloadDirectory();
-                const filePath = path.join(downloadDir, `${firstResult.title}.mp3`);
+                const fileName = sanitizeFileName(firstResult.title);
+                const filePath = path.join(downloadDir, `${fileName}.mp3`);
 
                 // Download the audio
                 await downloadAudio(firstResult.url, filePath);
+
+                // Check if the file exists before sending
+                try {
+                    await fs.access(filePath);
+                    console.log("File exists:", filePath);
+                } catch (error) {
+                    console.error("File does not exist or is inaccessible:", filePath);
+                    throw new Error("File not found after download.");
+                }
 
                 await conn.sendMessage(chatId, {
                     text: "🎶 Preparing your song. Please wait...",
