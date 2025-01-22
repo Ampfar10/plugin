@@ -34,7 +34,9 @@ def download_youtube_audio(url):
                 'key': 'FFmpegAudio',
                 'preferredcodec': 'mp3',
                 'preferredquality': '192',
+                'nopostoverwrites': False,
             }],
+            'ffmpeg_location': '/usr/bin/ffmpeg',  
         }
 
         with youtube_dl.YoutubeDL(ydl_opts) as ydl:
