@@ -1,5 +1,5 @@
 from flask import Flask, request, jsonify, send_file
-import youtube_dl
+import yt_dlp as youtube_dl
 from redis import Redis
 import os
 import uuid
