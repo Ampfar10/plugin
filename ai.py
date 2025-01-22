@@ -23,12 +23,23 @@ def download_youtube_audio(url):
         return cached_file.decode()  # Return cached file path if available
 
     try:
-        # Set a custom User-Agent header to avoid YouTube blocking the request
+        # Set custom headers using requests
         headers = {
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
         }
 
-        yt = YouTube(url, headers=headers)  # Pass the headers to pytube to avoid blocking
+        # Create a YouTube object with custom headers
+        yt = YouTube(url)
+        yt.streams.filter(only_audio=True).first()
+        
+        # Use requests session to fetch the video with custom headers
+        session = requests.Session()
+        session.headers.update(headers)
+        
+        # Manually fetch the video using requests to bypass YouTube's restrictions
+        yt._extract_video_info()
+        yt.streams._filter_files()
+        
         audio_stream = yt.streams.filter(only_audio=True).first()
         filename = f"{uuid.uuid4().hex}.mp3"
         file_path = os.path.join(DOWNLOAD_FOLDER, filename)
