@@ -22,11 +22,11 @@ def download_youtube_audio(url):
         return cached_file.decode()  # Return cached file path if available
 
     try:
-        # Set custom headers using youtube-dlp options
+        # yt-dlp options for downloading audio
         ydl_opts = {
-            'format': 'bestaudio/best',  # Download the best available audio format
+            'format': 'bestaudio/best',  # Best audio format
             'outtmpl': os.path.join(DOWNLOAD_FOLDER, '%(id)s.%(ext)s'),  # Save path with unique file name
-            'quiet': True,  # Don't print unnecessary logs
+            'quiet': True,  # Suppress unnecessary logs
             'headers': {
                 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
             },
@@ -34,22 +34,23 @@ def download_youtube_audio(url):
                 'key': 'FFmpegAudio',
                 'preferredcodec': 'mp3',
                 'preferredquality': '192',
-                'nopostoverwrites': False,
+                'nopostoverwrites': True,  # Avoid overwriting files
+                'ffmpeg_location': '/usr/bin/ffmpeg',  # Explicit path to ffmpeg
             }],
-            'ffmpeg_location': '/usr/bin/ffmpeg',  
         }
 
         with youtube_dl.YoutubeDL(ydl_opts) as ydl:
             info_dict = ydl.extract_info(url, download=True)
-            filename = f"{info_dict['id']}.mp3"  # Use the video ID as the file name
+            filename = f"{info_dict['id']}.mp3"  # Using the video ID as the file name
             file_path = os.path.join(DOWNLOAD_FOLDER, filename)
 
-        # Cache the file path for an hour
+        # Cache the file path for one hour
         cache.set(url, file_path, ex=3600)
         return file_path
     except Exception as e:
         print(f"Error downloading video: {e}")
         raise Exception("Failed to download audio")
+        
 
 @app.route('/download-music', methods=['POST'])
 def download_music_endpoint():
