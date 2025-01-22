@@ -1,5 +1,5 @@
 from flask import Flask, request, jsonify, send_file
-import yt_dlp
+import youtube_dl
 from redis import Redis
 import os
 import uuid
@@ -22,14 +22,22 @@ def download_youtube_audio(url):
         return cached_file.decode()  # Return cached file path if available
 
     try:
-        # Set custom headers using yt-dlp options
+        # Set custom headers using youtube-dlp options
         ydl_opts = {
             'format': 'bestaudio/best',  # Download the best available audio format
             'outtmpl': os.path.join(DOWNLOAD_FOLDER, '%(id)s.%(ext)s'),  # Save path with unique file name
             'quiet': True,  # Don't print unnecessary logs
+            'headers': {
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+            },
+            'postprocessors': [{
+                'key': 'FFmpegAudio',
+                'preferredcodec': 'mp3',
+                'preferredquality': '192',
+            }],
         }
 
-        with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+        with youtube_dl.YoutubeDL(ydl_opts) as ydl:
             info_dict = ydl.extract_info(url, download=True)
             filename = f"{info_dict['id']}.mp3"  # Use the video ID as the file name
             file_path = os.path.join(DOWNLOAD_FOLDER, filename)
