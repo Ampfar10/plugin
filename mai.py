@@ -4,6 +4,7 @@ from redis import Redis
 import os
 import uuid
 import time
+import requests
 
 app = Flask(__name__)
 DOWNLOAD_FOLDER = 'downloads'
@@ -21,14 +22,24 @@ def download_youtube_audio(url):
     if cached_file:
         return cached_file.decode()  # Return cached file path if available
 
-    yt = YouTube(url)
-    audio_stream = yt.streams.filter(only_audio=True).first()
-    filename = f"{uuid.uuid4().hex}.mp3"
-    file_path = os.path.join(DOWNLOAD_FOLDER, filename)
-    audio_stream.download(output_path=DOWNLOAD_FOLDER, filename=filename)
-    
-    cache.set(url, file_path, ex=3600)  # Cache result for 1 hour
-    return file_path
+    try:
+        # Set a custom User-Agent header to avoid YouTube blocking the request
+        headers = {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+        }
+
+        yt = YouTube(url, headers=headers)  # Pass the headers to pytube to avoid blocking
+        audio_stream = yt.streams.filter(only_audio=True).first()
+        filename = f"{uuid.uuid4().hex}.mp3"
+        file_path = os.path.join(DOWNLOAD_FOLDER, filename)
+        audio_stream.download(output_path=DOWNLOAD_FOLDER, filename=filename)
+        
+        # Cache the file path for an hour
+        cache.set(url, file_path, ex=3600)
+        return file_path
+    except Exception as e:
+        print(f"Error downloading video: {e}")
+        raise Exception("Failed to download audio")
 
 @app.route('/download-music', methods=['POST'])
 def download_music_endpoint():
@@ -38,7 +49,7 @@ def download_music_endpoint():
         if not url:
             return jsonify({'error': 'No URL provided'}), 400
 
-        start_time = time.time()  # Start timing
+        start_time = time.time()  # Start timing the download
         music_path = download_youtube_audio(url)
         elapsed_time = time.time() - start_time  # Calculate elapsed time
 
@@ -53,5 +64,5 @@ def status():
     return jsonify({'message': 'YouTube Music Downloader with Redis and Timer is running!'})
 
 if __name__ == '__main__':
-    app.run(host=0.0.0.0, debug=True threaded=True)
-           
+    # Host on 0.0.0.0 for public access and enable debug mode
+    app.run(host='0.0.0.0', port=5000, debug=True, threaded=True)
