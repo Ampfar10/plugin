@@ -1,10 +1,9 @@
 from flask import Flask, request, jsonify, send_file
-from pytube import YouTube
+import yt_dlp
 from redis import Redis
 import os
 import uuid
 import time
-import requests
 
 app = Flask(__name__)
 DOWNLOAD_FOLDER = 'downloads'
@@ -23,28 +22,18 @@ def download_youtube_audio(url):
         return cached_file.decode()  # Return cached file path if available
 
     try:
-        # Set custom headers using requests
-        headers = {
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+        # Set custom headers using yt-dlp options
+        ydl_opts = {
+            'format': 'bestaudio/best',  # Download the best available audio format
+            'outtmpl': os.path.join(DOWNLOAD_FOLDER, '%(id)s.%(ext)s'),  # Save path with unique file name
+            'quiet': True,  # Don't print unnecessary logs
         }
 
-        # Create a YouTube object with custom headers
-        yt = YouTube(url)
-        yt.streams.filter(only_audio=True).first()
-        
-        # Use requests session to fetch the video with custom headers
-        session = requests.Session()
-        session.headers.update(headers)
-        
-        # Manually fetch the video using requests to bypass YouTube's restrictions
-        yt._extract_video_info()
-        yt.streams._filter_files()
-        
-        audio_stream = yt.streams.filter(only_audio=True).first()
-        filename = f"{uuid.uuid4().hex}.mp3"
-        file_path = os.path.join(DOWNLOAD_FOLDER, filename)
-        audio_stream.download(output_path=DOWNLOAD_FOLDER, filename=filename)
-        
+        with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+            info_dict = ydl.extract_info(url, download=True)
+            filename = f"{info_dict['id']}.mp3"  # Use the video ID as the file name
+            file_path = os.path.join(DOWNLOAD_FOLDER, filename)
+
         # Cache the file path for an hour
         cache.set(url, file_path, ex=3600)
         return file_path
