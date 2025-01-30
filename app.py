@@ -30,62 +30,39 @@ async def get_qr_code():
     if os.path.exists(session_dir):
         print("Loading saved session...")
         browser = await launch(headless=False, userDataDir=session_dir)  # Load saved session
-        page = await browser.newPage()
-        await page.goto('https://web.whatsapp.com')
-
-        # Wait for the QR code to load and appear on screen
-        try:
-            # Wait for the QR code canvas element
-            await page.waitForSelector('canvas[aria-label="Scan me!"]', {"timeout": 30000})  # Wait for QR code to show
-            print("QR code found, taking a screenshot...")
-
-            # Take a screenshot of the QR code
-            await page.screenshot({'path': qr_code_image_path, 'clip': await page.evaluate('''
-                () => {
-                    const qrCanvas = document.querySelector('canvas[aria-label="Scan me!"]');
-                    const rect = qrCanvas.getBoundingClientRect();
-                    return { x: rect.x, y: rect.y, width: rect.width, height: rect.height };
-                }
-            ''')})
-            print("QR code screenshot saved!")
-
-        except Exception as e:
-            print(f"Error while waiting for QR code: {e}")
-            return
-
-        await browser.close()
     else:
         print("No saved session found, generating QR code...")
         browser = await launch(headless=False)  # Launch new browser if no session exists
-        page = await browser.newPage()
-        await page.goto('https://web.whatsapp.com')
 
-        # Wait for QR code to load
-        try:
-            # Wait for the QR code canvas element
-            await page.waitForSelector('canvas[aria-label="Scan me!"]', {"timeout": 30000})  # Wait for QR code to show
-            print("QR code found, taking a screenshot...")
+    page = await browser.newPage()
+    await page.goto('https://web.whatsapp.com')
 
-            # Take a screenshot of the QR code
-            await page.screenshot({'path': qr_code_image_path, 'clip': await page.evaluate('''
-                () => {
-                    const qrCanvas = document.querySelector('canvas[aria-label="Scan me!"]');
-                    const rect = qrCanvas.getBoundingClientRect();
-                    return { x: rect.x, y: rect.y, width: rect.width, height: rect.height };
-                }
-            ''')})
-            print("QR code screenshot saved!")
+    # Wait for the QR code to load and appear on screen
+    try:
+        # Wait for the QR code canvas element
+        await page.waitForSelector('canvas[aria-label="Scan me!"]', {"timeout": 30000})  # Wait for QR code to show
+        print("QR code found, taking a screenshot...")
 
-            # Save session after scanning QR code
-            print("Saving session...")
-            await browser.contexts[0].storageState(path=session_dir)
+        # Take a screenshot of the QR code
+        await page.screenshot({'path': qr_code_image_path, 'clip': await page.evaluate('''
+            () => {
+                const qrCanvas = document.querySelector('canvas[aria-label="Scan me!"]');
+                const rect = qrCanvas.getBoundingClientRect();
+                return { x: rect.x, y: rect.y, width: rect.width, height: rect.height };
+            }
+        ''')})
+        print("QR code screenshot saved!")
 
-        except Exception as e:
-            print(f"Error while waiting for QR code: {e}")
-            return
+        # Save session after scanning QR code
+        print("Saving session...")
+        await browser.contexts[0].storageState(path=session_dir)
 
-        await browser.close()
-        print("Session saved!")
+    except Exception as e:
+        print(f"Error while waiting for QR code: {e}")
+        return
+
+    await browser.close()
+    print("Session saved!")
 
 # Flask route to show the QR code image to the user
 @app.route('/qr')
