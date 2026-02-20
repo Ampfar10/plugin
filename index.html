@@ -1,43 +1,749 @@
-<!DOCTYPE html>
-<html lang="en">
+<!doctype html>
+<html>
 <head>
-  <meta charset="UTF-8">
-  <meta http-equiv="X-UA-Compatible" content="IE=Edge">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>File Explorer</title>
 
-  <title>Calculator</title>
-  
-  <!-- HTML -->
-  
+  <style>
+    :root{
+      --bg: #0f1115;
+      --panel: #151824;
+      --panel2: #111420;
+      --panel3: #0c0f18;
+      --text: #e8eaf0;
+      --muted:#a6acc4;
+      --border: rgba(255,255,255,.08);
+      --accent: #4ea1ff;
+      --accent2:#2b6fff;
+      --danger:#ff4d4d;
+      --shadow: 0 10px 30px rgba(0,0,0,.35);
+      --radius: 14px;
+      --radius2: 10px;
+      --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      --sans: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+    }
 
-  <!-- Custom Styles -->
-  <link rel="stylesheet" href="style.css">
+    *{ box-sizing:border-box; }
+    body{
+      margin:0;
+      font-family: var(--sans);
+      background: radial-gradient(1200px 600px at 20% -10%, rgba(78,161,255,.25), transparent 60%),
+                  radial-gradient(900px 500px at 100% 0%, rgba(43,111,255,.18), transparent 55%),
+                  var(--bg);
+      color: var(--text);
+      height:100vh;
+      overflow:hidden;
+    }
+
+    header{
+      height:60px;
+      display:flex;
+      align-items:center;
+      gap:12px;
+      padding: 10px 14px;
+      background: linear-gradient(180deg, rgba(21,24,36,.9), rgba(15,17,21,.9));
+      border-bottom: 1px solid var(--border);
+      backdrop-filter: blur(10px);
+    }
+    .appBadge{
+      width:40px;height:40px;
+      border-radius: 12px;
+      background: linear-gradient(135deg, rgba(78,161,255,.9), rgba(43,111,255,.7));
+      box-shadow: var(--shadow);
+      display:grid; place-items:center;
+      font-weight:800;
+    }
+    .titleWrap{ display:flex; flex-direction:column; line-height:1.1; }
+    .title{ font-weight:800; letter-spacing:.2px; }
+    .sub{ color: var(--muted); font-size: 12px; }
+
+    .crumbs{
+      flex:1;
+      display:flex;
+      align-items:center;
+      gap:8px;
+      background: rgba(255,255,255,.04);
+      border:1px solid var(--border);
+      border-radius: 999px;
+      padding: 8px 10px;
+      min-width: 0;
+    }
+    .crumbBtn{
+      width:36px; height:36px;
+      border-radius: 999px;
+      border:1px solid var(--border);
+      background: rgba(255,255,255,.04);
+      color: var(--text);
+      display:grid; place-items:center;
+      cursor:pointer;
+      transition: .12s ease;
+    }
+    .crumbBtn:hover{ transform: translateY(-1px); border-color: rgba(78,161,255,.5); }
+    .crumbPath{
+      min-width:0;
+      overflow:hidden;
+      text-overflow:ellipsis;
+      white-space:nowrap;
+      font-weight:650;
+    }
+    .pill{
+      font-size:12px;
+      color: var(--muted);
+      padding: 6px 10px;
+      border-radius: 999px;
+      border:1px solid var(--border);
+      background: rgba(255,255,255,.03);
+      white-space: nowrap;
+    }
+
+    main{
+      height: calc(100vh - 60px);
+      display:grid;
+      grid-template-columns: 280px 1.25fr 1fr;
+      gap: 12px;
+      padding: 12px;
+    }
+
+    .card{
+      background: linear-gradient(180deg, rgba(21,24,36,.95), rgba(17,20,32,.95));
+      border:1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      overflow:hidden;
+      min-height: 0;
+      display:flex;
+      flex-direction:column;
+    }
+
+    .navHeader{
+      padding: 14px 14px 10px;
+      border-bottom:1px solid var(--border);
+      display:flex; align-items:center; justify-content:space-between;
+      background: rgba(255,255,255,.02);
+    }
+    .navHeader .h{ font-weight:800; letter-spacing:.2px; }
+    .navList{
+      padding: 10px;
+      display:flex;
+      flex-direction:column;
+      gap: 8px;
+      overflow:auto;
+    }
+    .navItem{
+      display:flex;
+      align-items:center;
+      gap:10px;
+      padding: 10px 10px;
+      border-radius: 12px;
+      border:1px solid transparent;
+      background: rgba(255,255,255,.02);
+      cursor:pointer;
+      transition:.12s ease;
+      user-select:none;
+    }
+    .navItem:hover{
+      background: rgba(78,161,255,.09);
+      border-color: rgba(78,161,255,.25);
+      transform: translateY(-1px);
+    }
+    .navIcon{
+      width:34px;height:34px;
+      border-radius: 10px;
+      background: rgba(255,255,255,.05);
+      border:1px solid var(--border);
+      display:grid; place-items:center;
+      font-size: 16px;
+    }
+    .navText .t{ font-weight:700; }
+    .navText .s{ font-size:12px; color: var(--muted); }
+
+    .toolbar{
+      padding: 10px;
+      border-bottom:1px solid var(--border);
+      background: rgba(255,255,255,.02);
+      display:flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      align-items:center;
+    }
+    .btn{
+      border:1px solid var(--border);
+      background: rgba(255,255,255,.04);
+      color: var(--text);
+      border-radius: 12px;
+      padding: 9px 10px;
+      font-weight: 650;
+      cursor:pointer;
+      transition: .12s ease;
+      display:flex;
+      align-items:center;
+      gap: 8px;
+    }
+    .btn:hover{
+      transform: translateY(-1px);
+      border-color: rgba(78,161,255,.5);
+      background: rgba(78,161,255,.10);
+    }
+    .btn.primary{
+      background: linear-gradient(135deg, rgba(78,161,255,.95), rgba(43,111,255,.85));
+      border-color: rgba(78,161,255,.6);
+    }
+    .btn.primary:hover{ filter: brightness(1.05); }
+    .btn.danger{
+      border-color: rgba(255,77,77,.45);
+      background: rgba(255,77,77,.10);
+    }
+    .btn.danger:hover{
+      border-color: rgba(255,77,77,.75);
+      background: rgba(255,77,77,.16);
+    }
+    .spacer{ flex:1; }
+
+    .search{
+      display:flex;
+      align-items:center;
+      gap:8px;
+      padding: 9px 12px;
+      border-radius: 999px;
+      border:1px solid var(--border);
+      background: rgba(255,255,255,.03);
+      min-width: 220px;
+      flex: 0 1 320px;
+    }
+    .search input{
+      width:100%;
+      border:none;
+      outline:none;
+      background: transparent;
+      color: var(--text);
+      font-weight: 600;
+    }
+    .search .hint{ color: var(--muted); font-size: 13px; }
+
+    .tableWrap{
+      overflow:auto;
+      min-height: 0;
+    }
+    table{ width:100%; border-collapse: collapse; }
+    thead th{
+      text-align:left;
+      font-size:12px;
+      color: var(--muted);
+      font-weight:800;
+      padding: 10px 12px;
+      border-bottom:1px solid var(--border);
+      background: rgba(0,0,0,.10);
+      position: sticky;
+      top: 0;
+      z-index: 5;
+    }
+    tbody td{
+      padding: 10px 12px;
+      border-bottom:1px solid rgba(255,255,255,.05);
+      font-size: 14px;
+    }
+    tbody tr{
+      transition: .10s ease;
+      cursor:pointer;
+      user-select:none;
+    }
+    tbody tr:hover{
+      background: rgba(78,161,255,.07);
+    }
+    tbody tr.selected{
+      background: rgba(78,161,255,.18);
+      outline: 1px solid rgba(78,161,255,.35);
+    }
+    .nameCell{
+      display:flex;
+      align-items:center;
+      gap:10px;
+      min-width: 200px;
+    }
+    .fileIcon{
+      width:30px;height:30px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      display:grid; place-items:center;
+      background: rgba(255,255,255,.04);
+      flex:0 0 auto;
+      font-size: 15px;
+    }
+    .muted{ color: var(--muted); font-size: 12px; }
+
+    .editorTop{
+      padding: 10px;
+      border-bottom:1px solid var(--border);
+      background: rgba(255,255,255,.02);
+      display:flex;
+      gap: 8px;
+      align-items:center;
+    }
+    .pathBox{
+      flex:1;
+      border:1px solid var(--border);
+      background: rgba(255,255,255,.03);
+      border-radius: 12px;
+      padding: 10px 12px;
+      font-weight:700;
+      color: var(--text);
+      min-width: 0;
+      overflow:hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    textarea{
+      flex:1;
+      width:100%;
+      border:none;
+      outline:none;
+      padding: 14px;
+      font-family: var(--mono);
+      font-size: 13px;
+      color: var(--text);
+      background: linear-gradient(180deg, rgba(12,15,24,.7), rgba(8,10,16,.8));
+      resize:none;
+    }
+    .status{
+      padding: 10px 12px;
+      border-top:1px solid var(--border);
+      color: var(--muted);
+      font-size: 13px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap: 10px;
+      background: rgba(0,0,0,.10);
+    }
+    .toast{
+      padding: 6px 10px;
+      border-radius: 999px;
+      border:1px solid var(--border);
+      background: rgba(255,255,255,.03);
+      color: var(--muted);
+      font-size: 12px;
+      white-space: nowrap;
+    }
+
+    @media (max-width: 1100px){
+      main{ grid-template-columns: 280px 1fr; }
+      .editorCard{ display:none; }
+    }
+    @media (max-width: 720px){
+      main{ grid-template-columns: 1fr; }
+      .navCard{ display:none; }
+      .editorCard{ display:flex; }
+    }
+  </style>
 </head>
 
 <body>
- <div class="text">
-  <h1>Calculator-App</h1>
-  <h3>Made by Katakuri.</h3>
- </div>
-  <div class="calculator">
-    <input type="text" id="display" disabled>
-    <button class="cen" onclick="clearCal()">AC</button>
-    <button onclick="press('1')">1</button>
-    <button onclick="press('2')">2</button>
-    <button class="cen" onclick="press('3')">3</button>
-    <button onclick="press('4')">4</button>
-    <button onclick="press('5')">5</button>
-    <button class="cen" onclick="press('6')">6</button>
-    <button onclick="press('7')">7</button>
-    <button onclick="press('8')">8</button>
-    <button class="cen" onclick="press('9')">9</button>
-    <button onclick="press('+')">+</button>
-     <button onclick="press('-')">-</button>
-    <button class="cen" onclick="press('*')">×</button>
-    <button onclick="press('/')">÷</button>
-    <button id="equalSign" onclick="result()">=</button>
-  </div>
-  <!-- Project -->
-  <script src="main.js"></script>
+  <header>
+    <div class="appBadge">🗂️</div>
+    <div class="titleWrap">
+      <div class="title">File Explorer</div>
+      <div class="sub" id="root">root: …</div>
+    </div>
+
+    <div class="crumbs" title="Current path">
+      <button class="crumbBtn" id="upBtn" title="Up">⬆️</button>
+      <button class="crumbBtn" id="refreshBtn" title="Refresh">⟳</button>
+      <div class="crumbPath" id="path">/</div>
+      <div class="pill" id="selectedPill">No selection</div>
+    </div>
+
+    <div class="pill">Tip: double-click folder</div>
+  </header>
+
+  <main>
+    <section class="card navCard">
+      <div class="navHeader">
+        <div class="h">Quick Access</div>
+        <div class="muted">Windows-ish</div>
+      </div>
+
+      <div class="navList">
+        <div class="navItem" data-jump="">
+          <div class="navIcon">🏠</div>
+          <div class="navText">
+            <div class="t">Root</div>
+            <div class="s">Start here</div>
+          </div>
+        </div>
+
+        <div class="navItem" data-jump="..">
+          <div class="navIcon">⬆️</div>
+          <div class="navText">
+            <div class="t">Up</div>
+            <div class="s">Parent folder</div>
+          </div>
+        </div>
+
+        <div class="navItem" id="navNewFile">
+          <div class="navIcon">📄</div>
+          <div class="navText">
+            <div class="t">New file</div>
+            <div class="s">Create empty file</div>
+          </div>
+        </div>
+
+        <div class="navItem" id="navNewFolder">
+          <div class="navIcon">📁</div>
+          <div class="navText">
+            <div class="t">New folder</div>
+            <div class="s">Create directory</div>
+          </div>
+        </div>
+
+        <div class="navItem" id="navUpload">
+          <div class="navIcon">⬆️</div>
+          <div class="navText">
+            <div class="t">Upload</div>
+            <div class="s">Upload file here</div>
+          </div>
+        </div>
+
+        <div class="navItem" id="navDownload">
+          <div class="navIcon">⬇️</div>
+          <div class="navText">
+            <div class="t">Download</div>
+            <div class="s">Download selected</div>
+          </div>
+        </div>
+
+        <div class="navItem" id="navRename">
+          <div class="navIcon">✏️</div>
+          <div class="navText">
+            <div class="t">Rename</div>
+            <div class="s">Rename selected</div>
+          </div>
+        </div>
+
+        <div class="navItem" id="navDelete">
+          <div class="navIcon">🗑️</div>
+          <div class="navText">
+            <div class="t">Delete</div>
+            <div class="s">Remove selected</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="card">
+      <div class="toolbar">
+        <button class="btn primary" id="newFileBtn">➕ File</button>
+        <button class="btn primary" id="newFolderBtn">➕ Folder</button>
+        <button class="btn" id="renameBtn">✏️ Rename</button>
+        <button class="btn danger" id="deleteBtn">🗑️ Delete</button>
+        <button class="btn" id="downloadBtn">⬇️ Download</button>
+
+        <label class="btn" style="cursor:pointer;">
+          ⬆️ Upload
+          <input id="uploadInput" type="file" style="display:none" />
+        </label>
+
+        <div class="spacer"></div>
+
+        <div class="search" title="Client-side filter">
+          <span class="hint">🔎</span>
+          <input id="searchInput" placeholder="Search in this folder…" />
+        </div>
+      </div>
+
+      <div class="tableWrap">
+        <table>
+          <thead>
+            <tr>
+              <th style="width:60%;">Name</th>
+              <th style="width:20%;">Type</th>
+              <th style="width:20%;">Size</th>
+            </tr>
+          </thead>
+          <tbody id="list"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="card editorCard">
+      <div class="editorTop">
+        <div class="pathBox" id="editingPath">Select a file to edit…</div>
+        <button class="btn primary" id="saveBtn">💾 Save</button>
+      </div>
+
+      <textarea id="editor" placeholder="Select a text file to edit…"></textarea>
+
+      <div class="status">
+        <div id="status">Ready</div>
+        <div class="toast" id="hintToast">Double-click folder to open</div>
+      </div>
+    </section>
+  </main>
+
+<script>
+  let currentDir = "";
+  let selected = null;
+  let itemsCache = [];
+  let lastClick = { path: null, t: 0 };
+
+  const el = (id) => document.getElementById(id);
+
+  function setStatus(msg){
+    el("status").textContent = msg || "";
+  }
+  function setSelectedPill(){
+    if(!selected) el("selectedPill").textContent = "No selection";
+    else el("selectedPill").textContent = `${selected.type}: ${selected.name}`;
+  }
+
+  async function api(url, opts) {
+    const res = await fetch(url, opts);
+    const ct = res.headers.get("content-type") || "";
+    if (!res.ok) {
+      let msg = res.status + " " + res.statusText;
+      try {
+        if (ct.includes("application/json")) {
+          const j = await res.json();
+          msg = j.error || msg;
+        } else {
+          msg = await res.text();
+        }
+      } catch {}
+      throw new Error(msg);
+    }
+    if (ct.includes("application/json")) return res.json();
+    return res;
+  }
+
+  function iconFor(it){
+    if (it.type === "dir") return "📁";
+    const n = (it.name || "").toLowerCase();
+    if (n.endsWith(".js")) return "🟨";
+    if (n.endsWith(".json")) return "🧩";
+    if (n.endsWith(".html")) return "🌐";
+    if (n.endsWith(".css")) return "🎨";
+    if (n.endsWith(".md") || n.endsWith(".txt")) return "📝";
+    if (n.match(/\\.(png|jpg|jpeg|gif|webp)$/)) return "🖼️";
+    if (n.match(/\\.(zip|tar|gz|7z)$/)) return "🗜️";
+    return "📄";
+  }
+
+  function renderList(items) {
+    const q = (el("searchInput").value || "").trim().toLowerCase();
+    const filtered = q ? items.filter(x => x.name.toLowerCase().includes(q)) : items;
+
+    const tb = el("list");
+    tb.innerHTML = "";
+
+    for (const it of filtered) {
+      const tr = document.createElement("tr");
+      tr.dataset.path = it.path;
+
+      const size = it.type === "file" ? (it.size ?? "") : "";
+      tr.innerHTML = `
+        <td>
+          <div class="nameCell">
+            <div class="fileIcon">${iconFor(it)}</div>
+            <div>
+              <div style="font-weight:750;">${it.name}</div>
+              <div class="muted">${it.path}</div>
+            </div>
+          </div>
+        </td>
+        <td>${it.type}</td>
+        <td>${size}</td>
+      `;
+
+      tr.onclick = () => onClickRow(it, tr);
+      tb.appendChild(tr);
+    }
+
+    highlightSelectedRow();
+  }
+
+  function highlightSelectedRow(){
+    const rows = el("list").querySelectorAll("tr");
+    rows.forEach(r => r.classList.remove("selected"));
+    if(selected){
+      const r = el("list").querySelector(`tr[data-path="${CSS.escape(selected.path)}"]`);
+      if(r) r.classList.add("selected");
+    }
+  }
+
+  async function loadDir(dir) {
+    setStatus("Loading…");
+    selected = null;
+    setSelectedPill();
+    el("editingPath").textContent = "Select a file to edit…";
+    el("editor").value = "";
+
+    const data = await api(`/api/list?path=${encodeURIComponent(dir || "")}`);
+    currentDir = data.path || "";
+    el("path").textContent = "/" + (currentDir || "");
+    el("root").textContent = "root: " + data.root;
+
+    itemsCache = data.items || [];
+    renderList(itemsCache);
+
+    setStatus("Ready");
+  }
+
+  async function openItem(it){
+    selected = it;
+    setSelectedPill();
+    highlightSelectedRow();
+
+    if (it.type === "dir") {
+      await loadDir(it.path);
+      return;
+    }
+    setStatus("Reading file…");
+    const data = await api(`/api/read?path=${encodeURIComponent(it.path)}`);
+    el("editingPath").textContent = data.path;
+    el("editor").value = data.content;
+    setStatus("File loaded.");
+  }
+
+  async function onClickRow(it, tr){
+    const now = Date.now();
+    const dbl = lastClick.path === it.path && (now - lastClick.t) < 350;
+    lastClick = { path: it.path, t: now };
+
+    selected = it;
+    setSelectedPill();
+    highlightSelectedRow();
+    setStatus(`Selected: ${it.path}`);
+
+    if(dbl){
+      await openItem(it);
+    }
+  }
+
+  function parentDir(p) {
+    if (!p) return "";
+    const parts = p.split("/").filter(Boolean);
+    parts.pop();
+    return parts.join("/");
+  }
+
+  el("upBtn").onclick = () => loadDir(parentDir(currentDir));
+  el("refreshBtn").onclick = () => loadDir(currentDir);
+
+  el("searchInput").addEventListener("input", () => renderList(itemsCache));
+
+  async function createFolder(){
+    const name = prompt("Folder name:");
+    if (!name) return;
+    setStatus("Creating folder…");
+    const newPath = (currentDir ? currentDir + "/" : "") + name;
+    await api("/api/mkdir", {
+      method: "POST",
+      headers: {"Content-Type":"application/json"},
+      body: JSON.stringify({ path: newPath })
+    });
+    setStatus("Folder created.");
+    await loadDir(currentDir);
+  }
+
+  async function createFile(){
+    const name = prompt("File name (e.g. notes.txt):");
+    if (!name) return;
+    setStatus("Creating file…");
+    const newPath = (currentDir ? currentDir + "/" : "") + name;
+    await api("/api/touch", {
+      method: "POST",
+      headers: {"Content-Type":"application/json"},
+      body: JSON.stringify({ path: newPath })
+    });
+    setStatus("File created.");
+    await loadDir(currentDir);
+  }
+
+  async function renameSelected(){
+    if (!selected) return setStatus("Select a file/folder first.");
+    const newName = prompt("New name:", selected.name);
+    if (!newName || newName === selected.name) return;
+
+    const from = selected.path;
+    const base = parentDir(from);
+    const to = (base ? base + "/" : "") + newName;
+
+    setStatus("Renaming…");
+    await api("/api/rename", {
+      method: "POST",
+      headers: {"Content-Type":"application/json"},
+      body: JSON.stringify({ from, to })
+    });
+    setStatus("Renamed.");
+    await loadDir(currentDir);
+  }
+
+  async function deleteSelected(){
+    if (!selected) return setStatus("Select a file/folder first.");
+    const ok = confirm(`Delete "${selected.name}"? This is permanent.`);
+    if (!ok) return;
+    setStatus("Deleting…");
+    await api(`/api/delete?path=${encodeURIComponent(selected.path)}`, { method: "DELETE" });
+    setStatus("Deleted.");
+    await loadDir(currentDir);
+  }
+
+  function downloadSelected(){
+    if (!selected || selected.type !== "file") return setStatus("Select a file to download.");
+    window.location.href = `/api/download?path=${encodeURIComponent(selected.path)}`;
+  }
+
+  async function uploadFile(file){
+    if (!file) return;
+    setStatus("Uploading…");
+    const fd = new FormData();
+    fd.append("dir", currentDir || "");
+    fd.append("file", file);
+    await api("/api/upload", { method: "POST", body: fd });
+    setStatus("Uploaded.");
+    await loadDir(currentDir);
+  }
+
+  el("saveBtn").onclick = async () => {
+    const p = el("editingPath").textContent;
+    if (!p || p.includes("Select a file")) return setStatus("No file selected.");
+    setStatus("Saving…");
+    await api("/api/write", {
+      method: "POST",
+      headers: {"Content-Type":"application/json"},
+      body: JSON.stringify({ path: p, content: el("editor").value })
+    });
+    setStatus("Saved.");
+    await loadDir(currentDir);
+  };
+
+  el("newFolderBtn").onclick = createFolder;
+  el("newFileBtn").onclick = createFile;
+  el("renameBtn").onclick = renameSelected;
+  el("deleteBtn").onclick = deleteSelected;
+  el("downloadBtn").onclick = downloadSelected;
+
+  el("uploadInput").addEventListener("change", async (e) => {
+    const file = e.target.files[0];
+    await uploadFile(file);
+    el("uploadInput").value = "";
+  });
+
+  document.querySelectorAll(".navItem[data-jump]").forEach(n => {
+    n.onclick = () => {
+      const j = n.getAttribute("data-jump");
+      if(j === "..") loadDir(parentDir(currentDir));
+      else loadDir(j);
+    };
+  });
+  el("navNewFile").onclick = createFile;
+  el("navNewFolder").onclick = createFolder;
+  el("navUpload").onclick = () => el("uploadInput").click();
+  el("navDownload").onclick = downloadSelected;
+  el("navRename").onclick = renameSelected;
+  el("navDelete").onclick = deleteSelected;
+
+  loadDir("");
+</script>
 </body>
 </html>
