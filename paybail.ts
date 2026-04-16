@@ -4,7 +4,6 @@ import { db, invalidateUserDocumentCache } from "../../db/DatabaseHandler";
 import { appendSpendingHistoryEntry } from "../../lib/economy/economyStatement";
 import { formatBnhz, formatDuration, getJailRemainingMs } from "../../lib/economy/economyStore";
 import { debitUserBankAccounts, getTotalUserBankBalance, getUserBankAccounts } from "../../lib/economy/banking";
-import { isNewBankSystemEnabled } from "../../lib/economy/bankSystemSettings";
 
 module.exports = {
   name: "paybail",
@@ -32,25 +31,27 @@ module.exports = {
 
         bailAmount = Math.max(0, Number(userData.bailAmount || 0));
         const wallet = Math.max(0, Number(userData.wallet || 0));
-        const usingNewBank = isNewBankSystemEnabled();
-        const bank = usingNewBank
-          ? getTotalUserBankBalance(userData, { withdrawableOnly: true })
-          : getTotalUserBankBalance(userData);
+
+        // ✅ FIX: ALWAYS use FULL bank balance
+        const bank = getTotalUserBankBalance(userData);
         const totalHeld = wallet + bank;
 
+        // ✅ Correct check
         if (totalHeld < bailAmount) throw new Error(`Insufficient:${bailAmount}`);
 
+        // ✅ Deduction logic
         walletUsed = Math.min(wallet, bailAmount);
         bankUsed = Math.max(0, bailAmount - walletUsed);
-        const debitedBanks = usingNewBank
-          ? debitUserBankAccounts(userData, bankUsed, { withdrawableOnly: true })
-          : debitUserBankAccounts(userData, bankUsed);
+
+        // ✅ FIX: remove withdrawableOnly
+        const debitedBanks = debitUserBankAccounts(userData, bankUsed);
 
         if (debitedBanks.remainingAmount > 0) {
           throw new Error(`Insufficient:${bailAmount}`);
         }
 
         const hasRealBankAccounts = getUserBankAccounts(userData).length > 0;
+
         const nextBankTotal = hasRealBankAccounts
           ? getTotalUserBankBalance({ bankAccounts: debitedBanks.accounts })
           : Math.max(0, Number(userData.bank || 0)) - bankUsed;
@@ -86,23 +87,30 @@ module.exports = {
         bankUsed > 0
           ? `\nWallet: *${formatBnhz(walletUsed)}* | Bank: *${formatBnhz(bankUsed)}*`
           : "";
-      await ctx.reply(`🔓 Bail paid. You spent *${formatBnhz(bailAmount)}* and are out of jail now.${sourceLine}`);
+
+      await ctx.reply(
+        `🔓 Bail paid. You spent *${formatBnhz(bailAmount)}* and are out of jail now.${sourceLine}`
+      );
     } catch (error: any) {
       if (error.message === "User not found.") {
         return void ctx.reply("🟥 *User not found. Please write !register*");
       }
+
       if (error.message === "Not jailed.") {
         return void ctx.reply("🟨 *You are not in jail right now.*");
       }
+
       if (String(error.message || "").startsWith("Insufficient:")) {
         const bail = Number(String(error.message).split(":")[1] || 0);
         const userDoc = await userRef.get();
         const userData = userDoc.data() || {};
+
         const wallet = Math.max(0, Number(userData.wallet || 0));
-        const bank = isNewBankSystemEnabled()
-          ? getTotalUserBankBalance(userData, { withdrawableOnly: true })
-          : getTotalUserBankBalance(userData);
+
+        // ✅ FIX: use FULL bank here too
+        const bank = getTotalUserBankBalance(userData);
         const totalHeld = wallet + bank;
+
         return void ctx.reply(
           `🟥 *You do not have enough money to pay bail.*\n` +
             `Bail: *${formatBnhz(bail)}*\n` +
