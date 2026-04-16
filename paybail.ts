@@ -32,29 +32,41 @@ module.exports = {
         bailAmount = Math.max(0, Number(userData.bailAmount || 0));
         const wallet = Math.max(0, Number(userData.wallet || 0));
 
-        // ✅ FIX: ALWAYS use FULL bank balance
+        // ✅ ALWAYS use full bank
         const bank = getTotalUserBankBalance(userData);
         const totalHeld = wallet + bank;
 
         // ✅ Correct check
         if (totalHeld < bailAmount) throw new Error(`Insufficient:${bailAmount}`);
 
-        // ✅ Deduction logic
+        // ✅ Deduct wallet first
         walletUsed = Math.min(wallet, bailAmount);
         bankUsed = Math.max(0, bailAmount - walletUsed);
 
-        // ✅ FIX: remove withdrawableOnly
-        const debitedBanks = debitUserBankAccounts(userData, bankUsed);
+        // 🔥 Attempt normal bank debit
+        let debitedBanks = debitUserBankAccounts(userData, bankUsed);
 
+        // 🔥 FIX: fallback if bank system fails
         if (debitedBanks.remainingAmount > 0) {
-          throw new Error(`Insufficient:${bailAmount}`);
+          const fallbackBank = Math.max(0, Number(userData.bank || 0));
+
+          if (fallbackBank >= bankUsed) {
+            userData.bank = fallbackBank - bankUsed;
+
+            debitedBanks = {
+              remainingAmount: 0,
+              accounts: userData.bankAccounts || []
+            };
+          } else {
+            throw new Error(`Insufficient:${bailAmount}`);
+          }
         }
 
         const hasRealBankAccounts = getUserBankAccounts(userData).length > 0;
 
         const nextBankTotal = hasRealBankAccounts
           ? getTotalUserBankBalance({ bankAccounts: debitedBanks.accounts })
-          : Math.max(0, Number(userData.bank || 0)) - bankUsed;
+          : Math.max(0, Number(userData.bank || 0));
 
         transaction.update(userRef, {
           wallet: wallet - walletUsed,
@@ -91,6 +103,7 @@ module.exports = {
       await ctx.reply(
         `🔓 Bail paid. You spent *${formatBnhz(bailAmount)}* and are out of jail now.${sourceLine}`
       );
+
     } catch (error: any) {
       if (error.message === "User not found.") {
         return void ctx.reply("🟥 *User not found. Please write !register*");
@@ -106,16 +119,14 @@ module.exports = {
         const userData = userDoc.data() || {};
 
         const wallet = Math.max(0, Number(userData.wallet || 0));
-
-        // ✅ FIX: use FULL bank here too
         const bank = getTotalUserBankBalance(userData);
         const totalHeld = wallet + bank;
 
         return void ctx.reply(
           `🟥 *You do not have enough money to pay bail.*\n` +
-            `Bail: *${formatBnhz(bail)}*\n` +
-            `Wallet + Available Banks: *${formatBnhz(totalHeld)}*\n` +
-            `Time left: *${formatDuration(getJailRemainingMs(userData))}*`
+          `Bail: *${formatBnhz(bail)}*\n` +
+          `Wallet + Available Banks: *${formatBnhz(totalHeld)}*\n` +
+          `Time left: *${formatDuration(getJailRemainingMs(userData))}*`
         );
       }
 
